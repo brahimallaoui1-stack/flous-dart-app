@@ -27,8 +27,8 @@ import { cn } from '@/lib/utils';
 
 const createGroupSchema = z.object({
   groupName: z.string().min(3, 'Le nom doit contenir au moins 3 caractères.'),
-  contributionAmount: z.coerce.number({invalid_type_error: "Veuillez entrer un montant valide."}).min(50, 'Le montant minimum de la cotisation est de 50.'),
-  membersNumber: z.coerce.number({invalid_type_error: "Veuillez entrer un nombre valide."}).min(5, 'Il doit y avoir au moins 5 membres.'),
+  contributionAmount: z.coerce.number({invalid_type_error: "Veuillez entrer un montant valide."}).min(50, { message: 'Le montant minimum de la cotisation est de 50.' }),
+  membersNumber: z.coerce.number({invalid_type_error: "Veuillez entrer un nombre valide."}).min(5, { message: 'Il doit y avoir au moins 5 membres.' }),
   paymentFrequency: z.enum(['monthly', 'weekly'], {
     required_error: 'Veuillez sélectionner une fréquence.',
   }),
@@ -230,5 +230,3 @@ export default function CreateGroupPage() {
     </div>
   );
 }
-
-    
