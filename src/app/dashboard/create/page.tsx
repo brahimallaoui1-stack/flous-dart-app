@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -69,6 +69,16 @@ export default function CreateGroupPage() {
     setIsLoading(true);
 
     try {
+      // Check for existing group with the same name for this user
+      const q = query(collection(db, 'groups'), where('admin', '==', user.uid), where('name', '==', data.groupName));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        toast({ variant: 'destructive', description: "Vous avez déjà une association avec ce nom." });
+        setIsLoading(false);
+        return;
+      }
+
       const groupData = {
         name: data.groupName,
         contribution: data.contributionAmount,
@@ -136,7 +146,7 @@ export default function CreateGroupPage() {
                     <FormItem>
                       <FormLabel>Montant de la contribution (MAD)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 500" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.value)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="Ex: 500" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -149,7 +159,7 @@ export default function CreateGroupPage() {
                     <FormItem>
                       <FormLabel>Nombre de membres</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 10" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.value)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="Ex: 10" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
