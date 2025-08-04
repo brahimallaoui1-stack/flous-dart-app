@@ -4,8 +4,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -60,6 +61,23 @@ export default function LoginPage() {
             });
         } finally {
             setIsLoading(false);
+        }
+    };
+    
+    const handleGoogleLogin = async () => {
+        setIsGoogleLoading(true);
+        try {
+            await signInWithPopup(auth, googleProvider);
+            router.push('/dashboard');
+        } catch (error: any) {
+            console.error("Google login error:", error);
+            toast({
+                variant: "destructive",
+                title: "Erreur de connexion avec Google",
+                description: "Une erreur est survenue. Veuillez réessayer.",
+            });
+        } finally {
+            setIsGoogleLoading(false);
         }
     };
 
@@ -86,7 +104,7 @@ export default function LoginPage() {
                     required 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading || isGoogleLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -97,21 +115,24 @@ export default function LoginPage() {
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading || isGoogleLoading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button className="w-full" type="submit" disabled={isLoading}>
+              <Button className="w-full" type="submit" disabled={isLoading || isGoogleLoading}>
                 {isLoading ? "Connexion en cours..." : "Connexion"}
               </Button>
               <div className="relative w-full">
                 <Separator />
                 <span className="absolute left-1/2 -translate-x-1/2 top-[-10px] bg-card px-2 text-sm text-muted-foreground">OU</span>
               </div>
-              <Button variant="outline" className="w-full" disabled={isLoading}>
+              </CardFooter>
+        </form>
+        <div className="px-6 pb-6 flex flex-col gap-4">
+             <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
                 <GoogleIcon className="mr-2 h-4 w-4" />
-                Se connecter avec Google
+                {isGoogleLoading ? "Connexion avec Google..." : "Se connecter avec Google"}
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Vous n'avez pas de compte?{' '}
@@ -119,11 +140,8 @@ export default function LoginPage() {
                   Créer un compte
                 </Link>
               </p>
-            </CardFooter>
-        </form>
+        </div>
       </Card>
     </div>
   );
 }
-
-    

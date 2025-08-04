@@ -4,8 +4,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,7 @@ export default function SignupPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -70,6 +71,23 @@ export default function SignupPage() {
             setIsLoading(false);
         }
     };
+    
+    const handleGoogleSignup = async () => {
+        setIsGoogleLoading(true);
+        try {
+            await signInWithPopup(auth, googleProvider);
+            router.push('/dashboard');
+        } catch (error: any) {
+            console.error("Google signup error:", error);
+            toast({
+                variant: "destructive",
+                title: "Erreur d'inscription avec Google",
+                description: "Une erreur est survenue. Veuillez réessayer.",
+            });
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    };
 
 
   return (
@@ -95,7 +113,7 @@ export default function SignupPage() {
                     required 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading || isGoogleLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -107,7 +125,7 @@ export default function SignupPage() {
                     required 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading || isGoogleLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -118,30 +136,32 @@ export default function SignupPage() {
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading || isGoogleLoading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button className="w-full" type="submit" disabled={isLoading}>
+              <Button className="w-full" type="submit" disabled={isLoading || isGoogleLoading}>
                 {isLoading ? "Création en cours..." : "Créer le compte"}
               </Button>
               <div className="relative w-full">
                 <Separator />
                 <span className="absolute left-1/2 -translate-x-1/2 top-[-10px] bg-card px-2 text-sm text-muted-foreground">OU</span>
               </div>
-              <Button variant="outline" className="w-full" disabled={isLoading}>
-                <GoogleIcon className="mr-2 h-4 w-4" />
-                S'inscrire avec Google
-              </Button>
-              <p className="text-center text-sm text-muted-foreground">
-                Vous avez déjà un compte?{' '}
-                <Link href="/login" className="underline text-primary hover:text-primary/80">
-                  Se connecter
-                </Link>
-              </p>
-            </CardFooter>
+              </CardFooter>
         </form>
+        <div className="px-6 pb-6 flex flex-col gap-4">
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignup} disabled={isLoading || isGoogleLoading}>
+                <GoogleIcon className="mr-2 h-4 w-4" />
+                {isGoogleLoading ? "Inscription avec Google..." : "S'inscrire avec Google"}
+            </Button>
+            <p className="text-center text-sm text-muted-foreground">
+            Vous avez déjà un compte?{' '}
+            <Link href="/login" className="underline text-primary hover:text-primary/80">
+                Se connecter
+            </Link>
+            </p>
+        </div>
       </Card>
     </div>
   );
