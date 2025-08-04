@@ -11,7 +11,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { auth, db } from '@/lib/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, arrayUnion, doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 interface Group {
     id: string;
@@ -24,6 +26,11 @@ interface Group {
 export default function DashboardPage() {
   const [user] = useAuthState(auth);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [inviteCode, setInviteCode] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+
 
   const [groupsCollection, loading, error] = useCollection(
     user ? query(collection(db, 'groups'), where('members', 'array-contains', user.uid)) : null
@@ -38,6 +45,55 @@ export default function DashboardPage() {
       setGroups(userGroups);
     }
   }, [groupsCollection]);
+  
+  const handleJoinGroup = async () => {
+      if (!inviteCode.trim()) {
+          toast({ variant: 'destructive', description: "Veuillez entrer un code d'invitation." });
+          return;
+      }
+      if (!user) {
+          toast({ variant: 'destructive', description: "Vous devez être connecté pour rejoindre un groupe." });
+          return;
+      }
+
+      setIsJoining(true);
+
+      try {
+          const q = query(collection(db, 'groups'), where('inviteCode', '==', inviteCode.trim()));
+          const querySnapshot = await getDocs(q);
+
+          if (querySnapshot.empty) {
+              toast({ variant: 'destructive', description: "Aucune association trouvée avec ce code." });
+              return;
+          }
+
+          const groupDoc = querySnapshot.docs[0];
+          const groupData = groupDoc.data();
+
+          if (groupData.members.includes(user.uid)) {
+              toast({ variant: 'destructive', description: "Vous êtes déjà membre de cette association." });
+              return;
+          }
+
+          if (groupData.members.length >= groupData.maxMembers) {
+              toast({ variant: 'destructive', description: "Cette association est déjà complète." });
+              return;
+          }
+
+          await updateDoc(doc(db, 'groups', groupDoc.id), {
+              members: arrayUnion(user.uid)
+          });
+
+          toast({ description: `Vous avez rejoint l'association "${groupData.name}" !` });
+          router.push(`/dashboard/groups/${groupDoc.id}`);
+
+      } catch (err) {
+          console.error("Error joining group: ", err);
+          toast({ variant: 'destructive', description: "Une erreur est survenue." });
+      } finally {
+          setIsJoining(false);
+      }
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
@@ -103,10 +159,18 @@ export default function DashboardPage() {
                 <CardDescription>Saisissez le code pour rejoindre un groupe existant.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                <Input placeholder="Entrez le code..." />
+                <Input 
+                    placeholder="Entrez le code..." 
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    disabled={isJoining}
+                />
                 </CardContent>
                 <CardFooter>
-                <Button className="w-full">Rejoindre l'association</Button>
+                <Button className="w-full" onClick={handleJoinGroup} disabled={isJoining}>
+                    {isJoining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {isJoining ? 'Recherche...' : "Rejoindre l'association"}
+                </Button>
                 </CardFooter>
             </Card>
         </div>

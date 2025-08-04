@@ -4,8 +4,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { createUserWithEmailAndPassword, updateProfile, signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, User } from 'firebase/auth';
+import { auth, googleProvider, db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/logo';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { doc, setDoc } from 'firebase/firestore';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -34,6 +35,19 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     );
 }
 
+// Function to create a user document in Firestore
+const createUserDocument = async (user: User, name?: string) => {
+  if (!user) return;
+  const userRef = doc(db, 'users', user.uid);
+  const userData = {
+    uid: user.uid,
+    email: user.email,
+    displayName: name || user.displayName || 'Utilisateur',
+    photoURL: user.photoURL
+  };
+  await setDoc(userRef, userData, { merge: true });
+};
+
 export default function SignupPage() {
     const router = useRouter();
     const { toast } = useToast();
@@ -52,6 +66,7 @@ export default function SignupPage() {
                 await updateProfile(userCredential.user, {
                     displayName: name
                 });
+                await createUserDocument(userCredential.user, name);
             }
             router.push('/dashboard');
         } catch (error: any) {
@@ -75,7 +90,8 @@ export default function SignupPage() {
     const handleGoogleSignup = async () => {
         setIsGoogleLoading(true);
         try {
-            await signInWithPopup(auth, googleProvider);
+            const result = await signInWithPopup(auth, googleProvider);
+            await createUserDocument(result.user);
             router.push('/dashboard');
         } catch (error: any) {
             console.error("Google signup error:", error);

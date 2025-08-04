@@ -20,10 +20,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, History, Settings, SkipForward, User, Loader2, Share2, ClipboardCopy } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, Settings, SkipForward, User, Loader2, ClipboardCopy } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import React, { useEffect, useState } from 'react';
-import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import React, { useEffect, useState, useCallback } from 'react';
+import { doc, getDoc, collection, getDocs, query, where, documentId } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -49,19 +49,43 @@ interface Member {
     status: 'Payé' | 'En attente';
 }
 
+type UserDetails = {
+    displayName: string | null;
+    email: string | null;
+}
 
-async function fetchUserDetails(userIds: string[]): Promise<Map<string, {displayName: string | null, email: string | null}>> {
-    // This is a placeholder. In a real app, you'd fetch user details
-    // from a 'users' collection in Firestore or from Firebase Auth.
-    // For now, we'll return mock data.
-    const userDetails = new Map();
-    userIds.forEach(id => {
-        userDetails.set(id, {
-            displayName: `Utilisateur ${id.substring(0,5)}`,
-            email: `user_${id.substring(0,5)}@example.com`,
-        })
+
+async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDetails>> {
+    const userDetailsMap = new Map<string, UserDetails>();
+    if (userIds.length === 0) {
+        return userDetailsMap;
+    }
+
+    const usersRef = collection(db, 'users');
+    // Firestore 'in' query is limited to 30 elements. 
+    // If you expect more members, you'll need to batch the requests.
+    const q = query(usersRef, where(documentId(), 'in', userIds));
+    const querySnapshot = await getDocs(q);
+    
+    querySnapshot.forEach(doc => {
+        const userData = doc.data();
+        userDetailsMap.set(doc.id, {
+            displayName: userData.displayName || 'Utilisateur inconnu',
+            email: userData.email || 'email inconnu',
+        });
     });
-    return userDetails;
+
+    // For any user not found in 'users' collection (e.g. old data), fallback to a default
+    userIds.forEach(id => {
+        if (!userDetailsMap.has(id)) {
+            userDetailsMap.set(id, {
+                displayName: `Utilisateur ${id.substring(0, 5)}`,
+                email: 'N/A',
+            });
+        }
+    });
+
+    return userDetailsMap;
 }
 
 
@@ -71,54 +95,52 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
-  useEffect(() => {
-    const fetchGroupData = async () => {
-        if (!params.id) return;
-        setLoading(true);
+  const fetchGroupData = useCallback(async () => {
+    if (!params.id) return;
+    setLoading(true);
 
-        try {
-            const groupDocRef = doc(db, 'groups', params.id);
-            const groupSnap = await getDoc(groupDocRef);
+    try {
+        const groupDocRef = doc(db, 'groups', params.id);
+        const groupSnap = await getDoc(groupDocRef);
 
-            if (groupSnap.exists()) {
-                const groupData = groupSnap.data();
-                setGroupDetails({
-                    id: groupSnap.id,
-                    name: groupData.name,
-                    contribution: groupData.contribution,
-                    frequency: groupData.frequency,
-                    currentRound: groupData.currentRound,
-                    totalRounds: groupData.totalRounds,
-                    membersCount: groupData.members.length,
-                    inviteCode: groupData.inviteCode,
-                    // beneficiary will be fetched separately
-                });
+        if (groupSnap.exists()) {
+            const groupData = groupSnap.data();
+            setGroupDetails({
+                id: groupSnap.id,
+                name: groupData.name,
+                contribution: groupData.contribution,
+                frequency: groupData.frequency,
+                currentRound: groupData.currentRound,
+                totalRounds: groupData.totalRounds,
+                membersCount: groupData.members.length,
+                inviteCode: groupData.inviteCode,
+            });
 
-                // Fetch member details
-                const userDetailsMap = await fetchUserDetails(groupData.members);
+            const userDetailsMap = await fetchUserDetails(groupData.members);
 
-                const memberList: Member[] = groupData.members.map((memberId: string) => ({
-                    id: memberId,
-                    displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
-                    email: userDetailsMap.get(memberId)?.email || 'email inconnu',
-                    role: groupData.admin === memberId ? 'Admin' : 'Membre', // Add logic for 'Beneficiary'
-                    status: 'En attente' // Add payment status logic
-                }));
-                setMembers(memberList);
+            const memberList: Member[] = groupData.members.map((memberId: string) => ({
+                id: memberId,
+                displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
+                email: userDetailsMap.get(memberId)?.email || 'email inconnu',
+                role: groupData.admin === memberId ? 'Admin' : 'Membre',
+                status: 'En attente'
+            }));
+            setMembers(memberList);
 
-            } else {
-                toast({ variant: 'destructive', description: "Association non trouvée." });
-            }
-        } catch (error) {
-            console.error("Error fetching group data:", error);
-            toast({ variant: 'destructive', description: "Erreur lors de la récupération des données de l'association." });
-        } finally {
-            setLoading(false);
+        } else {
+            toast({ variant: 'destructive', description: "Association non trouvée." });
         }
-    };
-    
-    fetchGroupData();
+    } catch (error) {
+        console.error("Error fetching group data:", error);
+        toast({ variant: 'destructive', description: "Erreur lors de la récupération des données de l'association." });
+    } finally {
+        setLoading(false);
+    }
   }, [params.id, toast]);
+
+  useEffect(() => {
+    fetchGroupData();
+  }, [fetchGroupData]);
 
   const progressPercentage = (groupDetails && groupDetails.totalRounds > 0) 
     ? (groupDetails.currentRound / groupDetails.totalRounds) * 100 
@@ -160,7 +182,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
         <div>
             <h1 className="text-3xl font-bold font-headline tracking-tight">{groupDetails.name}</h1>
-            <p className="text-muted-foreground">{groupDetails.membersCount} membres • {groupDetails.contribution} MAD / {groupDetails.frequency}</p>
+            <p className="text-muted-foreground">{groupDetails.membersCount} / {groupDetails.totalRounds} membres • {groupDetails.contribution} MAD / {groupDetails.frequency}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
              <Button variant="outline" onClick={copyInviteCode}>
@@ -242,4 +264,3 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
-
