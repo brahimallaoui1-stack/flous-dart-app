@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ArrowLeft } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { ArrowLeft, CalendarIcon } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,6 +20,10 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+
 
 const createGroupSchema = z.object({
   groupName: z.string().min(3, 'Le nom doit contenir au moins 3 caractères.'),
@@ -25,6 +31,9 @@ const createGroupSchema = z.object({
   membersNumber: z.coerce.number().min(2, 'Il doit y avoir au moins 2 membres.'),
   paymentFrequency: z.enum(['monthly', 'weekly'], {
     required_error: 'Veuillez sélectionner une fréquence.',
+  }),
+   startDate: z.date({
+    required_error: "Veuillez sélectionner une date de début.",
   }),
 });
 
@@ -47,6 +56,7 @@ export default function CreateGroupPage() {
       contributionAmount: 1000,
       membersNumber: 12,
       paymentFrequency: 'monthly',
+      startDate: new Date(),
     },
   });
 
@@ -64,6 +74,7 @@ export default function CreateGroupPage() {
         contribution: data.contributionAmount,
         frequency: data.paymentFrequency,
         maxMembers: data.membersNumber,
+        startDate: data.startDate,
         members: [user.uid],
         admin: user.uid,
         createdAt: serverTimestamp(),
@@ -148,28 +159,61 @@ export default function CreateGroupPage() {
                 control={form.control}
                 name="paymentFrequency"
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
+                  <FormItem>
                     <FormLabel>Fréquence des paiements</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="monthly" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Mensuel</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="weekly" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Hebdomadaire</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
+                     <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez une fréquence" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="monthly">Mensuel</SelectItem>
+                          <SelectItem value="weekly">Hebdomadaire</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date de début des paiements</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP", { locale: fr })
+                            ) : (
+                              <span>Choisissez une date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date < new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
