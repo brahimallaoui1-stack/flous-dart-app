@@ -1,8 +1,18 @@
+
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
+  const [year, setYear] = useState(new Date().getFullYear());
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="p-4 flex justify-start">
@@ -28,7 +38,7 @@ export default function Home() {
         </div>
       </main>
       <footer className="p-4 text-center text-muted-foreground text-sm">
-        © {new Date().getFullYear()} Flous Dart. Tous droits réservés.
+        © {year} Flous Dart. Tous droits réservés.
       </footer>
     </div>
   );
