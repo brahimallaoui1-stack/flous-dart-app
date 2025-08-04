@@ -23,11 +23,12 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback } from 'react';
-import { doc, getDoc, collection, getDocs, query, where, documentId } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-
+import { addMonths, addWeeks, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface GroupDetails {
     id: string;
@@ -38,6 +39,7 @@ interface GroupDetails {
     currentRound: number;
     totalRounds: number;
     inviteCode: string;
+    startDate: Date;
     beneficiary?: {
         name: string;
     };
@@ -49,6 +51,7 @@ interface Member {
     email: string | null;
     role: 'Admin' | 'Membre' | 'Bénéficiaire';
     status: 'Payé' | 'En attente';
+    paymentDate: string;
 }
 
 type UserDetails = {
@@ -108,7 +111,9 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
 
         if (groupSnap.exists()) {
             const groupData = groupSnap.data();
-            setGroupDetails({
+            const startDate = (groupData.startDate as Timestamp).toDate();
+
+            const group: GroupDetails = {
                 id: groupSnap.id,
                 name: groupData.name,
                 contribution: groupData.contribution,
@@ -117,7 +122,18 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 totalRounds: groupData.totalRounds,
                 membersCount: groupData.members.length,
                 inviteCode: groupData.inviteCode,
-            });
+                startDate: startDate,
+            };
+            setGroupDetails(group);
+            
+            // Calculate current payment date
+            let currentPaymentDate: Date;
+            if (group.frequency === 'weekly') {
+                currentPaymentDate = addWeeks(startDate, group.currentRound);
+            } else { // monthly
+                currentPaymentDate = addMonths(startDate, group.currentRound);
+            }
+            const formattedPaymentDate = format(currentPaymentDate, 'PPP', { locale: fr });
 
             const userDetailsMap = await fetchUserDetails(groupData.members);
 
@@ -126,7 +142,8 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
                 email: userDetailsMap.get(memberId)?.email || 'email inconnu',
                 role: groupData.admin === memberId ? 'Admin' : 'Membre',
-                status: 'En attente'
+                status: 'En attente',
+                paymentDate: formattedPaymentDate
             }));
             setMembers(memberList);
 
@@ -191,7 +208,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
         <div>
             <h1 className="text-3xl font-bold font-headline tracking-tight">{groupDetails.name}</h1>
-            <p className="text-muted-foreground">{groupDetails.membersCount} / {groupDetails.totalRounds} membres • {groupDetails.contribution} MAD / {groupDetails.frequency}</p>
+            <p className="text-muted-foreground">{groupDetails.membersCount} / {groupDetails.totalRounds} membres • {groupDetails.contribution} MAD / {groupDetails.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
              <Button variant="outline" onClick={copyInviteCode}>
@@ -223,6 +240,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
               <TableRow>
                 <TableHead>Membre</TableHead>
                 <TableHead>Rôle</TableHead>
+                <TableHead>Date de paiement</TableHead>
                 <TableHead className="text-right">Statut du paiement</TableHead>
               </TableRow>
             </TableHeader>
@@ -247,6 +265,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                       {user && user.uid === member.id && <Badge variant="outline">Moi</Badge>}
                     </div>
                   </TableCell>
+                   <TableCell>{member.paymentDate}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       {member.status === 'Payé' ? (
@@ -265,7 +284,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 </TableRow>
               )) : (
                 <TableRow>
-                    <TableCell colSpan={3} className="text-center">Aucun membre dans cette association pour le moment.</TableCell>
+                    <TableCell colSpan={4} className="text-center">Aucun membre dans cette association pour le moment.</TableCell>
                 </TableRow>
               )}
             </TableBody>
