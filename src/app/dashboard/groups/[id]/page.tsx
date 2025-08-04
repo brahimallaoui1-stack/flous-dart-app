@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp } from 'firebase/firestore';
@@ -101,6 +101,20 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
+  const shuffleArray = (array: any[]) => {
+    let currentIndex = array.length, randomIndex;
+    // While there remain elements to shuffle.
+    while (currentIndex !== 0) {
+      // Pick a remaining element.
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+    return array;
+  }
+
   const fetchGroupData = useCallback(async () => {
     if (!params.id) return;
     setLoading(true);
@@ -134,10 +148,11 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 currentPaymentDate = addMonths(startDate, group.currentRound);
             }
             const formattedPaymentDate = format(currentPaymentDate, 'PPP', { locale: fr });
+            
+            const shuffledMemberIds = shuffleArray([...groupData.members]);
+            const userDetailsMap = await fetchUserDetails(shuffledMemberIds);
 
-            const userDetailsMap = await fetchUserDetails(groupData.members);
-
-            const memberList: Member[] = groupData.members.map((memberId: string) => ({
+            const memberList: Member[] = shuffledMemberIds.map((memberId: string) => ({
                 id: memberId,
                 displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
                 email: userDetailsMap.get(memberId)?.email || 'email inconnu',
@@ -172,6 +187,9 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
           toast({description: "Code d'invitation copié dans le presse-papiers !"});
       }
   }
+
+  const isGroupFull = groupDetails && groupDetails.membersCount === groupDetails.totalRounds;
+
 
   if (loading) {
       return (
@@ -235,60 +253,64 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
           <CardTitle>Membres de l'association</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Membre</TableHead>
-                <TableHead>Rôle</TableHead>
-                <TableHead>Date de paiement</TableHead>
-                <TableHead className="text-right">Statut du paiement</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {members.length > 0 ? members.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-3">
-                        <Avatar>
-                            <AvatarFallback className="bg-muted text-muted-foreground">
-                                <User className="h-5 w-5" />
-                            </AvatarFallback>
-                        </Avatar>
-                        <span>{member.displayName}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {member.role === 'Admin' && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
-                      {member.role === 'Membre' && <Badge variant="secondary">Membre</Badge>}
-                      {member.role === 'Bénéficiaire' && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
-                      {user && user.uid === member.id && <Badge variant="outline">Moi</Badge>}
-                    </div>
-                  </TableCell>
-                   <TableCell>{member.paymentDate}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {member.status === 'Payé' ? (
-                        <>
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                          <span className="text-green-500">Payé</span>
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="h-5 w-5 text-orange-500" />
-                          <span className="text-orange-500">En attente</span>
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )) : (
-                <TableRow>
-                    <TableCell colSpan={4} className="text-center">Aucun membre dans cette association pour le moment.</TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          {isGroupFull ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Membre</TableHead>
+                    <TableHead>Rôle</TableHead>
+                    <TableHead>Date de paiement</TableHead>
+                    <TableHead className="text-right">Statut du paiement</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {members.map((member) => (
+                    <TableRow key={member.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                            <Avatar>
+                                <AvatarFallback className="bg-muted text-muted-foreground">
+                                    <User className="h-5 w-5" />
+                                </AvatarFallback>
+                            </Avatar>
+                            <span>{member.displayName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {member.role === 'Admin' && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
+                          {member.role === 'Membre' && <Badge variant="secondary">Membre</Badge>}
+                          {member.role === 'Bénéficiaire' && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
+                          {user && user.uid === member.id && <Badge variant="outline">Moi</Badge>}
+                        </div>
+                      </TableCell>
+                       <TableCell>{member.paymentDate}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {member.status === 'Payé' ? (
+                            <>
+                              <CheckCircle className="h-5 w-5 text-green-500" />
+                              <span className="text-green-500">Payé</span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-5 w-5 text-orange-500" />
+                              <span className="text-orange-500">En attente</span>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+          ) : (
+            <div className="text-center py-10 px-6 text-muted-foreground">
+                <ShieldQuestion className="mx-auto h-12 w-12 mb-4" />
+                <p className="font-semibold">La liste des membres sera visible une fois l'association complète.</p>
+                <p>En attente de {groupDetails.totalRounds - groupDetails.membersCount} membre(s) supplémentaire(s).</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
