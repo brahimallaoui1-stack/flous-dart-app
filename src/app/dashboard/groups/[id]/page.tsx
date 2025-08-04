@@ -24,8 +24,10 @@ import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, Clipb
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, collection, getDocs, query, where, documentId } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthState } from 'react-firebase-hooks/auth';
+
 
 interface GroupDetails {
     id: string;
@@ -90,6 +92,7 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
 
 
 export default function GroupDetailPage({ params }: { params: { id: string } }) {
+  const [user] = useAuthState(auth);
   const [groupDetails, setGroupDetails] = useState<GroupDetails | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,6 +168,12 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   if (!groupDetails) {
        return (
           <div className="container mx-auto py-8 px-4 md:px-6">
+            <Button variant="ghost" asChild className="mb-4">
+                <Link href="/dashboard">
+                    <ArrowLeft className="mr-2 h-4 w-4"/>
+                    Retour à mes associations
+                </Link>
+            </Button>
             <p className="text-center text-destructive">Impossible de charger les détails de l'association.</p>
           </div>
       )
@@ -231,9 +240,12 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                     </div>
                   </TableCell>
                   <TableCell>
-                    {member.role === 'Admin' && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
-                    {member.role === 'Membre' && <Badge variant="secondary">Membre</Badge>}
-                    {member.role === 'Bénéficiaire' && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
+                    <div className="flex items-center gap-2">
+                      {member.role === 'Admin' && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
+                      {member.role === 'Membre' && <Badge variant="secondary">Membre</Badge>}
+                      {member.role === 'Bénéficiaire' && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
+                      {user && user.uid === member.id && <Badge variant="outline">Moi</Badge>}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
