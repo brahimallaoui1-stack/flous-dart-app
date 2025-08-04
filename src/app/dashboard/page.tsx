@@ -25,7 +25,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 md:order-2">
             <h2 className="text-2xl font-semibold mb-4">Mes associations</h2>
             <div className="grid gap-6 sm:grid-cols-2">
                 {userGroups.map((group) => (
@@ -52,7 +52,7 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        <div>
+        <div className="md:order-1">
             <h2 className="text-2xl font-semibold mb-4">Rejoindre une association</h2>
             <Card className="shadow-md">
                 <CardHeader>
