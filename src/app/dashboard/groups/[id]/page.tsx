@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -21,40 +20,130 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, History, Settings, SkipForward, User } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ArrowLeft, CheckCircle, Clock, Crown, History, Settings, SkipForward, User, Loader2, Share2, ClipboardCopy } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState } from 'react';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
-// In a real app, you would fetch this data from your database based on the group ID.
-const groupDetails = {
-    name: 'Chargement...',
-    membersCount: 0,
-    contribution: 0,
-    frequency: '...',
-    currentRound: 0,
-    totalRounds: 0,
-    beneficiary: {
-        name: '...',
-    },
-};
+interface GroupDetails {
+    id: string;
+    name: string;
+    membersCount: number;
+    contribution: number;
+    frequency: string;
+    currentRound: number;
+    totalRounds: number;
+    inviteCode: string;
+    beneficiary?: {
+        name: string;
+    };
+}
 
-const members: any[] = [];
+interface Member {
+    id: string;
+    displayName: string | null;
+    email: string | null;
+    role: 'Admin' | 'Membre' | 'Bénéficiaire';
+    status: 'Payé' | 'En attente';
+}
+
+
+async function fetchUserDetails(userIds: string[]): Promise<Map<string, {displayName: string | null, email: string | null}>> {
+    // This is a placeholder. In a real app, you'd fetch user details
+    // from a 'users' collection in Firestore or from Firebase Auth.
+    // For now, we'll return mock data.
+    const userDetails = new Map();
+    userIds.forEach(id => {
+        userDetails.set(id, {
+            displayName: `Utilisateur ${id.substring(0,5)}`,
+            email: `user_${id.substring(0,5)}@example.com`,
+        })
+    });
+    return userDetails;
+}
+
 
 export default function GroupDetailPage({ params }: { params: { id: string } }) {
+  const [groupDetails, setGroupDetails] = useState<GroupDetails | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
-  // Here you would fetch group data from your database using params.id
   useEffect(() => {
-    // Simulate data fetching
-    setTimeout(() => setLoading(false), 1000);
-  }, [params.id]);
+    const fetchGroupData = async () => {
+        if (!params.id) return;
+        setLoading(true);
 
-  const progressPercentage = (groupDetails.totalRounds > 0) ? (groupDetails.currentRound / groupDetails.totalRounds) * 100 : 0;
+        try {
+            const groupDocRef = doc(db, 'groups', params.id);
+            const groupSnap = await getDoc(groupDocRef);
+
+            if (groupSnap.exists()) {
+                const groupData = groupSnap.data();
+                setGroupDetails({
+                    id: groupSnap.id,
+                    name: groupData.name,
+                    contribution: groupData.contribution,
+                    frequency: groupData.frequency,
+                    currentRound: groupData.currentRound,
+                    totalRounds: groupData.totalRounds,
+                    membersCount: groupData.members.length,
+                    inviteCode: groupData.inviteCode,
+                    // beneficiary will be fetched separately
+                });
+
+                // Fetch member details
+                const userDetailsMap = await fetchUserDetails(groupData.members);
+
+                const memberList: Member[] = groupData.members.map((memberId: string) => ({
+                    id: memberId,
+                    displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
+                    email: userDetailsMap.get(memberId)?.email || 'email inconnu',
+                    role: groupData.admin === memberId ? 'Admin' : 'Membre', // Add logic for 'Beneficiary'
+                    status: 'En attente' // Add payment status logic
+                }));
+                setMembers(memberList);
+
+            } else {
+                toast({ variant: 'destructive', description: "Association non trouvée." });
+            }
+        } catch (error) {
+            console.error("Error fetching group data:", error);
+            toast({ variant: 'destructive', description: "Erreur lors de la récupération des données de l'association." });
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    fetchGroupData();
+  }, [params.id, toast]);
+
+  const progressPercentage = (groupDetails && groupDetails.totalRounds > 0) 
+    ? (groupDetails.currentRound / groupDetails.totalRounds) * 100 
+    : 0;
+
+  const copyInviteCode = () => {
+      if (groupDetails?.inviteCode) {
+          navigator.clipboard.writeText(groupDetails.inviteCode);
+          toast({description: "Code d'invitation copié dans le presse-papiers !"});
+      }
+  }
 
   if (loading) {
       return (
+          <div className="container mx-auto py-8 px-4 md:px-6 flex justify-center items-center h-[calc(100vh-200px)]">
+             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             <p className="ml-4 text-muted-foreground">Chargement des détails de l'association...</p>
+          </div>
+      )
+  }
+
+  if (!groupDetails) {
+       return (
           <div className="container mx-auto py-8 px-4 md:px-6">
-            <p>Chargement des détails de l'association...</p>
+            <p className="text-center text-destructive">Impossible de charger les détails de l'association.</p>
           </div>
       )
   }
@@ -71,10 +160,12 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
         <div>
             <h1 className="text-3xl font-bold font-headline tracking-tight">{groupDetails.name}</h1>
-            <p className="text-muted-foreground">{groupDetails.membersCount} membres • {groupDetails.contribution}€ / {groupDetails.frequency}</p>
+            <p className="text-muted-foreground">{groupDetails.membersCount} membres • {groupDetails.contribution} MAD / {groupDetails.frequency}</p>
         </div>
-        <div className="flex gap-2">
-            <Button variant="outline"><History className="mr-2 h-4 w-4" /> Historique</Button>
+        <div className="flex gap-2 flex-wrap">
+             <Button variant="outline" onClick={copyInviteCode}>
+                <ClipboardCopy className="mr-2 h-4 w-4" /> Code d'invitation: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
+            </Button>
             <Button variant="outline"><Settings className="mr-2 h-4 w-4" /> Paramètres</Button>
             <Button><SkipForward className="mr-2 h-4 w-4" /> Avancer prochaine visite</Button>
         </div>
@@ -84,7 +175,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         <Card className="lg:col-span-3 shadow-md">
             <CardHeader>
                 <CardTitle>Progression du cycle</CardTitle>
-                <CardDescription>Visite {groupDetails.currentRound} sur {groupDetails.totalRounds}. Bénéficiaire actuel: <span className="font-semibold text-primary">{groupDetails.beneficiary.name}</span></CardDescription>
+                <CardDescription>Visite {groupDetails.currentRound} sur {groupDetails.totalRounds}. Bénéficiaire actuel: <span className="font-semibold text-primary">{groupDetails.beneficiary?.name || 'A déterminer'}</span></CardDescription>
             </CardHeader>
             <CardContent>
                 <Progress value={progressPercentage} className="h-4" />
@@ -106,8 +197,8 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.length > 0 ? members.map((member, index) => (
-                <TableRow key={index}>
+              {members.length > 0 ? members.map((member) => (
+                <TableRow key={member.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                         <Avatar>
@@ -115,7 +206,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                                 <User className="h-5 w-5" />
                             </AvatarFallback>
                         </Avatar>
-                        <span>{member.name}</span>
+                        <span>{member.displayName}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -151,3 +242,4 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
