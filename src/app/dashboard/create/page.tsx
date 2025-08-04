@@ -27,8 +27,8 @@ import { cn } from '@/lib/utils';
 
 const createGroupSchema = z.object({
   groupName: z.string().min(3, 'Le nom doit contenir au moins 3 caractères.'),
-  contributionAmount: z.coerce.number().min(50, 'Le montant minimum de la cotisation est de 50.'),
-  membersNumber: z.coerce.number().min(5, 'Il doit y avoir au moins 5 membres.'),
+  contributionAmount: z.coerce.number({invalid_type_error: "Veuillez entrer un montant valide."}).min(50, 'Le montant minimum de la cotisation est de 50.'),
+  membersNumber: z.coerce.number({invalid_type_error: "Veuillez entrer un nombre valide."}).min(5, 'Il doit y avoir au moins 5 membres.'),
   paymentFrequency: z.enum(['monthly', 'weekly'], {
     required_error: 'Veuillez sélectionner une fréquence.',
   }),
@@ -136,7 +136,7 @@ export default function CreateGroupPage() {
                     <FormItem>
                       <FormLabel>Montant de la contribution (MAD)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 500" {...field} value={field.value ?? ''} />
+                        <Input type="number" placeholder="Ex: 500" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -149,7 +149,7 @@ export default function CreateGroupPage() {
                     <FormItem>
                       <FormLabel>Nombre de membres</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 10" {...field} value={field.value ?? ''} />
+                        <Input type="number" placeholder="Ex: 10" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -207,7 +207,7 @@ export default function CreateGroupPage() {
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) =>
-                            date < new Date() || date < new Date("1900-01-01")
+                            date < new Date(new Date().setHours(0,0,0,0))
                           }
                           initialFocus
                           locale={fr}
@@ -230,3 +230,5 @@ export default function CreateGroupPage() {
     </div>
   );
 }
+
+    
