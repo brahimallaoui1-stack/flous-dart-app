@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, Settings, SkipForward, User, Loader2, ClipboardCopy } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, collection, getDocs, query, where, documentId } from 'firebase/firestore';
@@ -188,7 +188,6 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
              <Button variant="outline" onClick={copyInviteCode}>
                 <ClipboardCopy className="mr-2 h-4 w-4" /> Code d'invitation: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
             </Button>
-            <Button variant="outline"><Settings className="mr-2 h-4 w-4" /> Paramètres</Button>
             <Button><SkipForward className="mr-2 h-4 w-4" /> Avancer prochaine visite</Button>
         </div>
       </div>
