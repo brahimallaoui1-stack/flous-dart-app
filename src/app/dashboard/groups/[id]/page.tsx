@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -20,7 +21,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, History, Settings, SkipForward } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, History, Settings, SkipForward, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import React, { useEffect, useState } from 'react';
 
@@ -110,8 +111,9 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                         <Avatar>
-                            <AvatarImage src={`https://placehold.co/100x100.png?${index}`} data-ai-hint="person face" />
-                            <AvatarFallback>{member.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback className="bg-muted text-muted-foreground">
+                                <User className="h-5 w-5" />
+                            </AvatarFallback>
                         </Avatar>
                         <span>{member.name}</span>
                     </div>

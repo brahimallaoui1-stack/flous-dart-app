@@ -68,8 +68,9 @@ export default function DashboardLayout({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={user.photoURL || `https://placehold.co/100x100.png`} alt="User Avatar" data-ai-hint="user avatar" />
-                  <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                  <AvatarFallback className="bg-muted text-muted-foreground">
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

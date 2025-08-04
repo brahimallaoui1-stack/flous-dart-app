@@ -7,19 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, User } from 'lucide-react';
 
 export default function ProfilePage() {
   const [user, loading] = useAuthState(auth);
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return '??';
-    const names = name.split(' ');
-    if (names.length > 1) {
-      return names[0][0] + names[names.length - 1][0];
-    }
-    return name.substring(0, 2);
-  };
 
   if (loading) {
     return <div className="container mx-auto py-8 px-4 md:px-6">Chargement du profil...</div>;
@@ -44,8 +35,9 @@ export default function ProfilePage() {
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={user.photoURL || `https://placehold.co/100x100.png`} data-ai-hint="user avatar" />
-              <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+               <AvatarFallback className="bg-muted text-muted-foreground">
+                    <User className="h-12 w-12" />
+                </AvatarFallback>
             </Avatar>
             <div className="space-y-1">
               <h2 className="text-2xl font-bold">{user.displayName || 'Utilisateur'}</h2>
