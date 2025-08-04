@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,9 +28,13 @@ export default function CreateGroupPage() {
             <Label htmlFor="group-name">Nom de l'association</Label>
             <Input id="group-name" placeholder="Ex: Tontine des entrepreneurs" />
           </div>
+           <div className="space-y-2">
+            <Label htmlFor="contribution-amount">Montant de la contribution (en MAD)</Label>
+            <Input id="contribution-amount" type="number" placeholder="Ex: 1000" />
+          </div>
           <div className="space-y-2">
-            <Label htmlFor="contribution-amount">Montant de la contribution (en €)</Label>
-            <Input id="contribution-amount" type="number" placeholder="Ex: 100" />
+            <Label htmlFor="members-number">Nombre de membres</Label>
+            <Input id="members-number" type="number" placeholder="Ex: 12" />
           </div>
           <div className="space-y-2">
             <Label>Fréquence des paiements</Label>
