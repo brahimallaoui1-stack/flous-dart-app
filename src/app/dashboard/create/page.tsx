@@ -136,7 +136,7 @@ export default function CreateGroupPage() {
                     <FormItem>
                       <FormLabel>Montant de la contribution (MAD)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 500" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="Ex: 500" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.value)} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -149,7 +149,7 @@ export default function CreateGroupPage() {
                     <FormItem>
                       <FormLabel>Nombre de membres</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 10" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} value={field.value ?? ''} />
+                        <Input type="number" placeholder="Ex: 10" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : e.target.value)} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
