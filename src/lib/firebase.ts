@@ -7,15 +7,15 @@ import { getAnalytics } from "firebase/analytics";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
+  "projectId": "flous-dart-manager",
+  "appId": "1:1004091828401:web:ca731e7647c4611688da90",
+  "storageBucket": "flous-dart-manager.firebasestorage.app",
+  "apiKey": "AIzaSyDpPib_QcdNZ6OGJ_CiXxLm-9pn_ZCF93Y",
+  "authDomain": "flous-dart-manager.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "1004091828401"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// const analytics = getAnalytics(app);
