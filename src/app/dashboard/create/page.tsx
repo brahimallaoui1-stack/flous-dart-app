@@ -53,8 +53,8 @@ export default function CreateGroupPage() {
     resolver: zodResolver(createGroupSchema),
     defaultValues: {
       groupName: '',
-      contributionAmount: 1000,
-      membersNumber: 12,
+      contributionAmount: undefined,
+      membersNumber: undefined,
       paymentFrequency: 'monthly',
       startDate: new Date(),
     },
