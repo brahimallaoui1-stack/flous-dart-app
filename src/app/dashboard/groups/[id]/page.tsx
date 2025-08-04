@@ -22,8 +22,8 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import React, { useEffect, useState, useCallback } from 'react';
-import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp } from 'firebase/firestore';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -35,30 +35,29 @@ interface GroupDetails {
     name: string;
     membersCount: number;
     contribution: number;
-    frequency: string;
+    frequency: 'monthly' | 'weekly';
     currentRound: number;
     totalRounds: number;
     inviteCode: string;
     startDate: Date;
-    beneficiary?: {
-        name: string;
-    };
+    status: string;
+    beneficiary?: { id: string, name: string };
 }
 
 interface Member {
     id: string;
     displayName: string | null;
     email: string | null;
-    role: 'Admin' | 'Membre' | 'Bénéficiaire';
+    role: 'Admin' | 'Membre' | 'Bénéficiaire' | 'Moi';
     status: 'Payé' | 'En attente';
     paymentDate: string;
+    beneficiaryDate: string;
 }
 
 type UserDetails = {
     displayName: string | null;
     email: string | null;
 }
-
 
 async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDetails>> {
     const userDetailsMap = new Map<string, UserDetails>();
@@ -67,9 +66,7 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
     }
 
     const usersRef = collection(db, 'users');
-    // Firestore 'in' query is limited to 30 elements. 
-    // If you expect more members, you'll need to batch the requests.
-    const q = query(usersRef, where(documentId(), 'in', userIds));
+    const q = query(usersRef, where(documentId(), 'in', userIds.slice(0, 30)));
     const querySnapshot = await getDocs(q);
     
     querySnapshot.forEach(doc => {
@@ -80,41 +77,34 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
         });
     });
 
-    // For any user not found in 'users' collection (e.g. old data), fallback to a default
     userIds.forEach(id => {
         if (!userDetailsMap.has(id)) {
-            userDetailsMap.set(id, {
-                displayName: `Utilisateur ${id.substring(0, 5)}`,
-                email: 'N/A',
-            });
+            userDetailsMap.set(id, { displayName: `Utilisateur ${id.substring(0, 5)}`, email: 'N/A' });
         }
     });
 
     return userDetailsMap;
 }
 
+const shuffleArray = (array: any[]) => {
+    let currentIndex = array.length, randomIndex;
+    while (currentIndex !== 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
+}
 
 export default function GroupDetailPage({ params }: { params: { id: string } }) {
   const [user] = useAuthState(auth);
   const [groupDetails, setGroupDetails] = useState<GroupDetails | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGivingTurn, setIsGivingTurn] = useState(false);
   const { toast } = useToast();
   
-  const shuffleArray = (array: any[]) => {
-    let currentIndex = array.length, randomIndex;
-    // While there remain elements to shuffle.
-    while (currentIndex !== 0) {
-      // Pick a remaining element.
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-      // And swap it with the current element.
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
-    }
-    return array;
-  }
-
   const fetchGroupData = useCallback(async () => {
     if (!params.id) return;
     setLoading(true);
@@ -126,6 +116,22 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         if (groupSnap.exists()) {
             const groupData = groupSnap.data();
             const startDate = (groupData.startDate as Timestamp).toDate();
+            const isGroupFull = groupData.members.length === groupData.maxMembers;
+            
+            let finalTurnOrder = groupData.turnOrder || [];
+            
+            // If group is full and turn order isn't set, create and save it
+            if (isGroupFull && (!groupData.turnOrder || groupData.turnOrder.length === 0)) {
+                finalTurnOrder = shuffleArray([...groupData.members]);
+                await updateDoc(groupDocRef, { 
+                    turnOrder: finalTurnOrder,
+                    status: 'En cours' // Set status to "En cours" when group is full
+                });
+            }
+            setTurnOrder(finalTurnOrder);
+
+            const userDetailsMap = await fetchUserDetails(groupData.members);
+            const beneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound] : undefined;
 
             const group: GroupDetails = {
                 id: groupSnap.id,
@@ -137,30 +143,33 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 membersCount: groupData.members.length,
                 inviteCode: groupData.inviteCode,
                 startDate: startDate,
+                status: isGroupFull ? 'En cours' : 'En attente',
+                beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
             };
             setGroupDetails(group);
             
-            // Calculate current payment date
-            let currentPaymentDate: Date;
-            if (group.frequency === 'weekly') {
-                currentPaymentDate = addWeeks(startDate, group.currentRound);
-            } else { // monthly
-                currentPaymentDate = addMonths(startDate, group.currentRound);
+            if (isGroupFull) {
+                const memberList: Member[] = finalTurnOrder.map((memberId: string, index: number) => {
+                    let roles: ('Admin' | 'Membre' | 'Bénéficiaire' | 'Moi')[] = [];
+                    if (groupData.admin === memberId) roles.push('Admin');
+                    if (user && user.uid === memberId) roles.push('Moi');
+                    if (beneficiaryId === memberId) roles.push('Bénéficiaire');
+                    if (roles.length === 0) roles.push('Membre');
+                    
+                    const calcDate = (base: Date, i: number) => group.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
+                    
+                    return {
+                        id: memberId,
+                        displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
+                        email: userDetailsMap.get(memberId)?.email || 'email inconnu',
+                        role: roles.join(', ') as any, // Simple join for display
+                        status: 'En attente', // Payment status logic to be implemented separately
+                        paymentDate: format(calcDate(startDate, group.currentRound), 'PPP', { locale: fr }),
+                        beneficiaryDate: format(calcDate(startDate, index), 'PPP', { locale: fr }),
+                    }
+                });
+                setMembers(memberList);
             }
-            const formattedPaymentDate = format(currentPaymentDate, 'PPP', { locale: fr });
-            
-            const shuffledMemberIds = shuffleArray([...groupData.members]);
-            const userDetailsMap = await fetchUserDetails(shuffledMemberIds);
-
-            const memberList: Member[] = shuffledMemberIds.map((memberId: string) => ({
-                id: memberId,
-                displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
-                email: userDetailsMap.get(memberId)?.email || 'email inconnu',
-                role: groupData.admin === memberId ? 'Admin' : 'Membre',
-                status: 'En attente',
-                paymentDate: formattedPaymentDate
-            }));
-            setMembers(memberList);
 
         } else {
             toast({ variant: 'destructive', description: "Association non trouvée." });
@@ -171,14 +180,51 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     } finally {
         setLoading(false);
     }
-  }, [params.id, toast]);
+  }, [params.id, toast, user]);
 
   useEffect(() => {
     fetchGroupData();
   }, [fetchGroupData]);
 
+  const handleGiveTurn = async () => {
+    if (!user || !groupDetails || turnOrder.length < 2) return;
+
+    setIsGivingTurn(true);
+    try {
+        const currentUserIndex = turnOrder.findIndex(id => id === user.uid);
+        
+        // Ensure the current user is the beneficiary and it's not the last round
+        if (currentUserIndex !== groupDetails.currentRound || groupDetails.currentRound >= groupDetails.totalRounds - 1) {
+            toast({ variant: 'destructive', description: "Vous ne pouvez pas donner votre tour maintenant." });
+            return;
+        }
+
+        const newTurnOrder = [...turnOrder];
+        const nextMemberId = newTurnOrder[currentUserIndex + 1];
+
+        // Swap current user with the next one
+        newTurnOrder[currentUserIndex] = nextMemberId;
+        newTurnOrder[currentUserIndex + 1] = user.uid;
+
+        await updateDoc(doc(db, 'groups', params.id), {
+            turnOrder: newTurnOrder
+        });
+
+        setTurnOrder(newTurnOrder);
+        toast({ description: "Votre tour a été donné avec succès !" });
+        fetchGroupData(); // Refresh data to show changes
+    } catch (error) {
+        console.error("Error giving turn: ", error);
+        toast({ variant: 'destructive', description: "Une erreur est survenue." });
+    } finally {
+        setIsGivingTurn(false);
+    }
+  };
+  
+  const isCurrentUserBeneficiary = user && groupDetails?.beneficiary?.id === user.uid;
+
   const progressPercentage = (groupDetails && groupDetails.totalRounds > 0) 
-    ? (groupDetails.currentRound / groupDetails.totalRounds) * 100 
+    ? ((groupDetails.currentRound + 1) / groupDetails.totalRounds) * 100
     : 0;
 
   const copyInviteCode = () => {
@@ -189,7 +235,6 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   }
 
   const isGroupFull = groupDetails && groupDetails.membersCount === groupDetails.totalRounds;
-
 
   if (loading) {
       return (
@@ -230,9 +275,14 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         </div>
         <div className="flex gap-2 flex-wrap">
              <Button variant="outline" onClick={copyInviteCode}>
-                <ClipboardCopy className="mr-2 h-4 w-4" /> Code d'invitation: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
+                <ClipboardCopy className="mr-2 h-4 w-4" /> Code: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
             </Button>
-            <Button><SkipForward className="mr-2 h-4 w-4" /> Donner mon tour</Button>
+            {isCurrentUserBeneficiary && (
+                <Button onClick={handleGiveTurn} disabled={isGivingTurn}>
+                    {isGivingTurn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SkipForward className="mr-2 h-4 w-4" />}
+                    {isGivingTurn ? 'Chargement...' : 'Donner mon tour'}
+                </Button>
+            )}
         </div>
       </div>
 
@@ -240,7 +290,9 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         <Card className="lg:col-span-3 shadow-md">
             <CardHeader>
                 <CardTitle>Progression du cycle</CardTitle>
-                <CardDescription>Visite {groupDetails.currentRound} sur {groupDetails.totalRounds}. Bénéficiaire actuel: <span className="font-semibold text-primary">{groupDetails.beneficiary?.name || 'A déterminer'}</span></CardDescription>
+                <CardDescription>
+                    Tour {groupDetails.currentRound + 1} sur {groupDetails.totalRounds}. Bénéficiaire actuel: <span className="font-semibold text-primary">{groupDetails.beneficiary?.name || 'A déterminer'}</span>
+                </CardDescription>
             </CardHeader>
             <CardContent>
                 <Progress value={progressPercentage} className="h-4" />
@@ -250,7 +302,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
 
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle>Membres de l'association</CardTitle>
+          <CardTitle>Ordre de passage et membres</CardTitle>
         </CardHeader>
         <CardContent>
           {isGroupFull ? (
@@ -259,45 +311,36 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                   <TableRow>
                     <TableHead>Membre</TableHead>
                     <TableHead>Rôle</TableHead>
-                    <TableHead>Date de paiement</TableHead>
-                    <TableHead className="text-right">Statut du paiement</TableHead>
+                    <TableHead>Date de réception</TableHead>
+                    <TableHead>Prochain paiement</TableHead>
+                    <TableHead className="text-right">Statut paiement</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {members.map((member) => (
-                    <TableRow key={member.id}>
+                    <TableRow key={member.id} className={member.id === groupDetails.beneficiary?.id ? 'bg-secondary' : ''}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-3">
-                            <Avatar>
-                                <AvatarFallback className="bg-muted text-muted-foreground">
-                                    <User className="h-5 w-5" />
-                                </AvatarFallback>
-                            </Avatar>
+                            <Avatar><AvatarFallback><User className="h-5 w-5" /></AvatarFallback></Avatar>
                             <span>{member.displayName}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          {member.role === 'Admin' && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {member.role.includes('Admin') && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
+                          {member.role.includes('Bénéficiaire') && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
+                          {member.role.includes('Moi') && <Badge variant="outline">Moi</Badge>}
                           {member.role === 'Membre' && <Badge variant="secondary">Membre</Badge>}
-                          {member.role === 'Bénéficiaire' && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
-                          {user && user.uid === member.id && <Badge variant="outline">Moi</Badge>}
                         </div>
                       </TableCell>
+                       <TableCell>{member.beneficiaryDate}</TableCell>
                        <TableCell>{member.paymentDate}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {member.status === 'Payé' ? (
-                            <>
-                              <CheckCircle className="h-5 w-5 text-green-500" />
-                              <span className="text-green-500">Payé</span>
-                            </>
-                          ) : (
-                            <>
-                              <Clock className="h-5 w-5 text-orange-500" />
-                              <span className="text-orange-500">En attente</span>
-                            </>
-                          )}
+                          {member.status === 'Payé' ? 
+                            ( <><CheckCircle className="h-5 w-5 text-green-500" /> <span className="text-green-500">Payé</span></> ) : 
+                            ( <><Clock className="h-5 w-5 text-orange-500" /> <span className="text-orange-500">En attente</span></> )
+                          }
                         </div>
                       </TableCell>
                     </TableRow>
@@ -307,7 +350,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
           ) : (
             <div className="text-center py-10 px-6 text-muted-foreground">
                 <ShieldQuestion className="mx-auto h-12 w-12 mb-4" />
-                <p className="font-semibold">La liste des membres sera visible une fois l'association complète.</p>
+                <p className="font-semibold">L'ordre de passage sera visible une fois l'association complète.</p>
                 <p>En attente de {groupDetails.totalRounds - groupDetails.membersCount} membre(s) supplémentaire(s).</p>
             </div>
           )}
