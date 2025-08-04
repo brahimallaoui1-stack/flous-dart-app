@@ -1,3 +1,6 @@
+
+'use client';
+
 import Link from 'next/link';
 import {
   Table,
@@ -19,30 +22,41 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, CheckCircle, Clock, Crown, History, Settings, SkipForward } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import React, { useEffect, useState } from 'react';
 
+// In a real app, you would fetch this data from your database based on the group ID.
 const groupDetails = {
-    name: 'Famille Unie',
-    membersCount: 12,
-    contribution: 100,
-    frequency: 'Mensuel',
-    currentRound: 5,
-    totalRounds: 12,
+    name: 'Chargement...',
+    membersCount: 0,
+    contribution: 0,
+    frequency: '...',
+    currentRound: 0,
+    totalRounds: 0,
     beneficiary: {
-        name: 'Marie Dubois',
-        avatar: 'https://placehold.co/100x100.png'
+        name: '...',
     },
 };
 
-const members = [
-  { name: 'John Doe', avatar: 'https://placehold.co/100x100.png', status: 'Payé', role: 'Membre' },
-  { name: 'Marie Dubois', avatar: 'https://placehold.co/100x100.png', status: 'Payé', role: 'Bénéficiaire' },
-  { name: 'Pierre Martin', avatar: 'https://placehold.co/100x100.png', status: 'En attente', role: 'Membre' },
-  { name: 'Admin User', avatar: 'https://placehold.co/100x100.png', status: 'Payé', role: 'Admin' },
-  { name: 'Sophie Bernard', avatar: 'https://placehold.co/100x100.png', status: 'Payé', role: 'Membre' },
-];
+const members: any[] = [];
 
 export default function GroupDetailPage({ params }: { params: { id: string } }) {
-  const progressPercentage = (groupDetails.currentRound / groupDetails.totalRounds) * 100;
+  const [loading, setLoading] = useState(true);
+  
+  // Here you would fetch group data from your database using params.id
+  useEffect(() => {
+    // Simulate data fetching
+    setTimeout(() => setLoading(false), 1000);
+  }, [params.id]);
+
+  const progressPercentage = (groupDetails.totalRounds > 0) ? (groupDetails.currentRound / groupDetails.totalRounds) * 100 : 0;
+
+  if (loading) {
+      return (
+          <div className="container mx-auto py-8 px-4 md:px-6">
+            <p>Chargement des détails de l'association...</p>
+          </div>
+      )
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
@@ -91,12 +105,12 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {members.map((member, index) => (
+              {members.length > 0 ? members.map((member, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                         <Avatar>
-                            <AvatarImage src={`${member.avatar}?${index}`} data-ai-hint="person face" />
+                            <AvatarImage src={`https://placehold.co/100x100.png?${index}`} data-ai-hint="person face" />
                             <AvatarFallback>{member.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <span>{member.name}</span>
@@ -123,7 +137,11 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                    <TableCell colSpan={3} className="text-center">Aucun membre dans cette association pour le moment.</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

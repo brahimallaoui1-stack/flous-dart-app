@@ -1,15 +1,16 @@
+
+'use client';
+
 import Link from 'next/link';
 import { PlusCircle, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import React from 'react';
 
-const userGroups = [
-  { id: '1', name: 'Famille Unie', members: 12, status: 'En cours', nextBeneficiary: 'Marie Dubois' },
-  { id: '2', name: 'Collègues Solidaires', members: 8, status: 'En cours', nextBeneficiary: 'Paul Martin' },
-  { id: '3', name: 'Amis d\'enfance', members: 6, status: 'Terminé', nextBeneficiary: '-' },
-];
+// This will be replaced by data fetched from your database
+const userGroups: any[] = [];
 
 export default function DashboardPage() {
   return (
@@ -25,34 +26,42 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
-        <div className="md:col-span-2 md:order-2">
+        <div className="md:col-span-2 md:order-last">
             <h2 className="text-2xl font-semibold mb-4">Mes associations</h2>
-            <div className="grid gap-6 sm:grid-cols-2">
-                {userGroups.map((group) => (
-                <Link href={`/dashboard/groups/${group.id}`} key={group.id} className="block hover:scale-[1.02] transition-transform duration-200">
-                    <Card className="h-full flex flex-col shadow-md hover:shadow-xl transition-shadow">
-                    <CardHeader>
-                        <CardTitle>{group.name}</CardTitle>
-                        <CardDescription>Prochain bénéficiaire: {group.nextBeneficiary}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                        <div className="flex items-center text-sm text-muted-foreground">
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>{group.members} membres</span>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                        <Badge variant={group.status === 'En cours' ? 'default' : 'secondary'} className={group.status === 'En cours' ? 'bg-green-500 text-white' : ''}>
-                        {group.status}
-                        </Badge>
-                    </CardFooter>
-                    </Card>
-                </Link>
-                ))}
-            </div>
+            {userGroups.length > 0 ? (
+                <div className="grid gap-6 sm:grid-cols-2">
+                    {userGroups.map((group) => (
+                    <Link href={`/dashboard/groups/${group.id}`} key={group.id} className="block hover:scale-[1.02] transition-transform duration-200">
+                        <Card className="h-full flex flex-col shadow-md hover:shadow-xl transition-shadow">
+                        <CardHeader>
+                            <CardTitle>{group.name}</CardTitle>
+                            <CardDescription>Prochain bénéficiaire: {group.nextBeneficiary}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                            <div className="flex items-center text-sm text-muted-foreground">
+                            <Users className="mr-2 h-4 w-4" />
+                            <span>{group.members} membres</span>
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Badge variant={group.status === 'En cours' ? 'default' : 'secondary'} className={group.status === 'En cours' ? 'bg-green-500 text-white' : ''}>
+                            {group.status}
+                            </Badge>
+                        </CardFooter>
+                        </Card>
+                    </Link>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-12 px-6 bg-card rounded-lg shadow-md">
+                    <h3 className="text-xl font-semibold mb-2">Bienvenue !</h3>
+                    <p className="text-muted-foreground mb-4">Vous ne faites partie d'aucune association pour le moment.</p>
+                    <p className="text-muted-foreground">Créez-en une ou rejoignez un groupe existant avec un code d'invitation.</p>
+                </div>
+            )}
         </div>
 
-        <div className="md:order-1">
+        <div className="md:order-first">
             <h2 className="text-2xl font-semibold mb-4">Rejoindre une association</h2>
             <Card className="shadow-md">
                 <CardHeader>
