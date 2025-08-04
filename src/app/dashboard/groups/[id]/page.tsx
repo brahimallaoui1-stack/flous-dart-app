@@ -232,7 +232,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
              <Button variant="outline" onClick={copyInviteCode}>
                 <ClipboardCopy className="mr-2 h-4 w-4" /> Code d'invitation: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
             </Button>
-            <Button><SkipForward className="mr-2 h-4 w-4" /> Avancer prochaine visite</Button>
+            <Button><SkipForward className="mr-2 h-4 w-4" /> Donner mon tour</Button>
         </div>
       </div>
 
