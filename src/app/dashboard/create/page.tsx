@@ -27,8 +27,8 @@ import { cn } from '@/lib/utils';
 
 const createGroupSchema = z.object({
   groupName: z.string().min(3, 'Le nom doit contenir au moins 3 caractères.'),
-  contributionAmount: z.coerce.number().min(1, 'Le montant doit être supérieur à 0.'),
-  membersNumber: z.coerce.number().min(2, 'Il doit y avoir au moins 2 membres.'),
+  contributionAmount: z.coerce.number().min(50, 'Le montant minimum de la cotisation est de 50.'),
+  membersNumber: z.coerce.number().min(5, 'Il doit y avoir au moins 5 membres.'),
   paymentFrequency: z.enum(['monthly', 'weekly'], {
     required_error: 'Veuillez sélectionner une fréquence.',
   }),
@@ -134,9 +134,9 @@ export default function CreateGroupPage() {
                   name="contributionAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Montant de la contribution (en MAD)</FormLabel>
+                      <FormLabel>Montant de la contribution (MAD)</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 1000" {...field} />
+                        <Input type="number" placeholder="Ex: 500" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -149,7 +149,7 @@ export default function CreateGroupPage() {
                     <FormItem>
                       <FormLabel>Nombre de membres</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="Ex: 12" {...field} />
+                        <Input type="number" placeholder="Ex: 10" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
