@@ -51,6 +51,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { addMonths, addWeeks, format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface GroupDetails {
     id: string;
@@ -286,6 +287,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   
   const isCurrentUserBeneficiary = user && groupDetails?.beneficiary?.id === user.uid;
   const isLastRound = groupDetails && groupDetails.currentRound >= groupDetails.totalRounds - 1;
+  const hasUserReceivedFunds = user && groupDetails?.receptionStatus?.[user.uid] === 'Reçu';
 
   const eligibleMembersForSwap = useMemo(() => {
     if (!user || !groupDetails || !isCurrentUserBeneficiary || isLastRound) return [];
@@ -361,7 +363,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             
             <Dialog open={isGiveTurnDialogOpen} onOpenChange={setIsGiveTurnDialogOpen}>
                 <DialogTrigger asChild>
-                    <Button disabled={!isCurrentUserBeneficiary || isLastRound || eligibleMembersForSwap.length === 0}>
+                    <Button disabled={!isCurrentUserBeneficiary || isLastRound || eligibleMembersForSwap.length === 0 || hasUserReceivedFunds}>
                         <SkipForward className="mr-2 h-4 w-4" />
                         Donner mon tour
                     </Button>
