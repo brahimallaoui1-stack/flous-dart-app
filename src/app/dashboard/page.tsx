@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { PlusCircle, Users, Loader2, User, Calendar, CircleDollarSign, Hash, ChevronsRight, Crown } from 'lucide-react';
+import { PlusCircle, Users, Loader2, User, Calendar, CircleDollarSign, Hash, ChevronsRight, Crown, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -259,6 +259,10 @@ export default function DashboardPage() {
                             <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><Users className="mr-2 h-4 w-4"/>Membres</span>
                                 <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
+                            </div>
+                             <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                                <span className="flex items-center text-muted-foreground"><Repeat className="mr-2 h-4 w-4"/>Fréquence</span>
+                                <span className="font-bold capitalize">{group.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}</span>
                             </div>
                             <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><CircleDollarSign className="mr-2 h-4 w-4"/>Cotisation</span>
