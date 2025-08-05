@@ -256,7 +256,6 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const handleConfirmReception = async (memberId: string) => {
     if (!user || user.uid !== memberId) return;
 
-    setIsConfirmingReception(true);
     try {
         const groupDocRef = doc(db, 'groups', groupId);
         // Use dot notation to update a specific field in a map
@@ -269,8 +268,6 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     } catch (error) {
         console.error("Error confirming reception:", error);
         toast({ variant: 'destructive', description: "Une erreur est survenue lors de la confirmation." });
-    } finally {
-        setIsConfirmingReception(false);
     }
 };
 
@@ -451,16 +448,9 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                            ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id ? (
                                <AlertDialog>
                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                        size="sm"
-                                        disabled={isConfirmingReception}
-                                    >
-                                        {isConfirmingReception ? (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Wallet className="mr-2 h-4 w-4" />
-                                        )}
-                                        J'ai reçu
+                                    <Button size="sm">
+                                      <Wallet className="mr-2 h-4 w-4" />
+                                      J'ai reçu
                                     </Button>
                                  </AlertDialogTrigger>
                                  <AlertDialogContent>
@@ -500,3 +490,5 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
+    
