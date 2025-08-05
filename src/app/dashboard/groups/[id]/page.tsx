@@ -19,6 +19,17 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -65,8 +76,6 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
     }
 
     const usersRef = collection(db, 'users');
-    // Firestore 'in' query supports a maximum of 30 elements in the array.
-    // If you expect more members, you'll need to chunk this query.
     const q = query(usersRef, where(documentId(), 'in', userIds.slice(0, 30)));
     const querySnapshot = await getDocs(q);
     
@@ -78,10 +87,8 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
         });
     });
 
-    // Fallback for users not found in the 'users' collection for some reason
     userIds.forEach(id => {
         if (!userDetailsMap.has(id)) {
-            // Provide a default display name, e.g., based on user ID
             userDetailsMap.set(id, { displayName: `Utilisateur ${id.substring(0, 5)}`, email: 'N/A' });
         }
     });
@@ -91,30 +98,25 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
 
 const shuffleArray = (array: any[]) => {
     let currentIndex = array.length, randomIndex;
-
-    // While there remain elements to shuffle.
     while (currentIndex !== 0) {
-
-      // Pick a remaining element.
       randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
-
-      // And swap it with the current element.
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
     }
-
     return array;
 }
 
 
-export default function GroupDetailPage({ params: { id: groupId } }: { params: { id: string } }) {
+export default function GroupDetailPage({ params }: { params: { id: string } }) {
+  const { id: groupId } = params;
   const [user] = useAuthState(auth);
   const [groupDetails, setGroupDetails] = useState<GroupDetails | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGivingTurn, setIsGivingTurn] = useState(false);
+  const [isGiveTurnDialogOpen, setIsGiveTurnDialogOpen] = useState(false);
+  const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
   const { toast } = useToast();
   
   const fetchGroupData = useCallback(async () => {
@@ -132,12 +134,11 @@ export default function GroupDetailPage({ params: { id: groupId } }: { params: {
             
             let finalTurnOrder = groupData.turnOrder || [];
             
-            // If group is full and turn order isn't set, create and save it
             if (isGroupFull && (!groupData.turnOrder || groupData.turnOrder.length === 0)) {
                 finalTurnOrder = shuffleArray([...groupData.members]);
                 await updateDoc(groupDocRef, { 
                     turnOrder: finalTurnOrder,
-                    status: 'En cours' // Set status to "En cours" when group is full
+                    status: 'En cours'
                 });
             }
             setTurnOrder(finalTurnOrder);
@@ -174,8 +175,8 @@ export default function GroupDetailPage({ params: { id: groupId } }: { params: {
                         id: memberId,
                         displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
                         email: userDetailsMap.get(memberId)?.email || 'email inconnu',
-                        role: roles.join(', ') as any, // Simple join for display
-                        status: 'En attente', // Payment status logic to be implemented separately
+                        role: roles.join(', ') as any,
+                        status: 'En attente',
                         beneficiaryDate: format(calcDate(startDate, index), 'PPP', { locale: fr }),
                     }
                 });
@@ -197,42 +198,54 @@ export default function GroupDetailPage({ params: { id: groupId } }: { params: {
     fetchGroupData();
   }, [fetchGroupData]);
 
-  const handleGiveTurn = async () => {
-    if (!user || !groupDetails || turnOrder.length < 2) return;
+ const handleConfirmGiveTurn = async () => {
+    if (!user || !groupDetails || !selectedMemberToSwap || turnOrder.length < 2) return;
 
     setIsGivingTurn(true);
     try {
         const currentUserIndex = turnOrder.findIndex(id => id === user.uid);
-        
-        // Ensure the current user is the beneficiary and it's not the last round
-        if (currentUserIndex !== groupDetails.currentRound || groupDetails.currentRound >= groupDetails.totalRounds - 1) {
-            toast({ variant: 'destructive', description: "Vous ne pouvez pas donner votre tour maintenant." });
+        const targetUserIndex = turnOrder.findIndex(id => id === selectedMemberToSwap);
+
+        if (currentUserIndex !== groupDetails.currentRound || targetUserIndex <= currentUserIndex) {
+            toast({ variant: 'destructive', description: "Action non autorisée." });
             return;
         }
 
         const newTurnOrder = [...turnOrder];
-        const nextMemberId = newTurnOrder[currentUserIndex + 1];
-
-        // Swap current user with the next one
-        newTurnOrder[currentUserIndex] = nextMemberId;
-        newTurnOrder[currentUserIndex + 1] = user.uid;
-
+        // Swap
+        [newTurnOrder[currentUserIndex], newTurnOrder[targetUserIndex]] = [newTurnOrder[targetUserIndex], newTurnOrder[currentUserIndex]];
+        
         await updateDoc(doc(db, 'groups', groupId), {
             turnOrder: newTurnOrder
         });
 
         setTurnOrder(newTurnOrder);
         toast({ description: "Votre tour a été donné avec succès !" });
-        fetchGroupData(); // Refresh data to show changes
+        await fetchGroupData(); // Refresh data
     } catch (error) {
         console.error("Error giving turn: ", error);
         toast({ variant: 'destructive', description: "Une erreur est survenue." });
     } finally {
         setIsGivingTurn(false);
+        setIsGiveTurnDialogOpen(false);
+        setSelectedMemberToSwap(null);
     }
   };
   
   const isCurrentUserBeneficiary = user && groupDetails?.beneficiary?.id === user.uid;
+  const isLastRound = groupDetails && groupDetails.currentRound >= groupDetails.totalRounds - 1;
+
+  const eligibleMembersForSwap = useMemo(() => {
+    if (!user || !groupDetails || !isCurrentUserBeneficiary || isLastRound) return [];
+    
+    const currentUserIndex = turnOrder.findIndex(id => id === user.uid);
+    if (currentUserIndex === -1) return [];
+
+    // Filter members who come after the current user in the turn order
+    return members.filter((member, index) => index > currentUserIndex);
+
+  }, [user, groupDetails, isCurrentUserBeneficiary, isLastRound, turnOrder, members]);
+
 
   const progressPercentage = (groupDetails && groupDetails.totalRounds > 0) 
     ? ((groupDetails.currentRound + 1) / groupDetails.totalRounds) * 100
@@ -288,12 +301,50 @@ export default function GroupDetailPage({ params: { id: groupId } }: { params: {
              <Button variant="outline" onClick={copyInviteCode}>
                 <ClipboardCopy className="mr-2 h-4 w-4" /> Code: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
             </Button>
-            {isCurrentUserBeneficiary && (
-                <Button onClick={handleGiveTurn} disabled={isGivingTurn}>
-                    {isGivingTurn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SkipForward className="mr-2 h-4 w-4" />}
-                    {isGivingTurn ? 'Chargement...' : 'Donner mon tour'}
-                </Button>
-            )}
+            
+            <Dialog open={isGiveTurnDialogOpen} onOpenChange={setIsGiveTurnDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button disabled={!isCurrentUserBeneficiary || isLastRound || eligibleMembersForSwap.length === 0}>
+                        <SkipForward className="mr-2 h-4 w-4" />
+                        Donner mon tour
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                    <DialogTitle>À qui souhaitez-vous donner votre tour ?</DialogTitle>
+                    <DialogDescription>
+                        Sélectionnez le membre qui bénéficiera de la tontine à votre place pour ce tour. Cette action est irréversible.
+                    </DialogDescription>
+                    </DialogHeader>
+                    <RadioGroup 
+                        onValueChange={setSelectedMemberToSwap}
+                        className="my-4 max-h-64 overflow-y-auto"
+                    >
+                        {eligibleMembersForSwap.map(member => (
+                            <div key={member.id} className="flex items-center space-x-2 rounded-md border p-3">
+                                <RadioGroupItem value={member.id} id={member.id} />
+                                <Label htmlFor={member.id} className="flex-1 cursor-pointer">
+                                   <div className="flex items-center gap-3">
+                                        <Avatar className="h-8 w-8"><AvatarFallback><User className="h-4 w-4" /></AvatarFallback></Avatar>
+                                        <div className="flex flex-col">
+                                            <span className="font-semibold">{member.displayName}</span>
+                                            <span className="text-xs text-muted-foreground">Date de réception prévue: {member.beneficiaryDate}</span>
+                                        </div>
+                                    </div>
+                                </Label>
+                            </div>
+                        ))}
+                    </RadioGroup>
+                    <DialogFooter>
+                    <Button variant="ghost" onClick={() => setIsGiveTurnDialogOpen(false)}>Annuler</Button>
+                    <Button onClick={handleConfirmGiveTurn} disabled={isGivingTurn || !selectedMemberToSwap}>
+                        {isGivingTurn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        {isGivingTurn ? 'Confirmation...' : 'Confirmer et donner mon tour'}
+                    </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
       </div>
 
