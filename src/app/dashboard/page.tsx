@@ -33,6 +33,7 @@ interface Group {
     totalRounds: number;
     startDate: Date;
     turnOrder: string[];
+    userRole: 'Admin' | 'Membre';
     
     // Calculated fields
     currentBeneficiary?: UserDetails;
@@ -85,7 +86,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const processGroups = async () => {
-        if (groupsCollection) {
+        if (groupsCollection && user) {
             setLoadingGroups(true);
             const allUserIds = new Set<string>();
             groupsCollection.docs.forEach(doc => {
@@ -119,6 +120,7 @@ export default function DashboardPage() {
                     totalRounds: totalRounds,
                     startDate: startDate,
                     turnOrder: data.turnOrder || [],
+                    userRole: data.admin === user.uid ? 'Admin' : 'Membre',
                     currentBeneficiary: currentBeneficiaryId ? userDetailsMap.get(currentBeneficiaryId) : undefined,
                     nextBeneficiary: nextBeneficiaryId ? userDetailsMap.get(nextBeneficiaryId) : undefined,
                     totalContribution: data.contribution * totalRounds,
@@ -133,7 +135,7 @@ export default function DashboardPage() {
     };
 
     processGroups();
-  }, [groupsCollection, loadingCollection]);
+  }, [groupsCollection, loadingCollection, user]);
   
   const handleJoinGroup = async () => {
       if (!inviteCode.trim()) {
@@ -239,13 +241,16 @@ export default function DashboardPage() {
                 <Link href={`/dashboard/groups/${group.id}`} key={group.id} className="block hover:scale-[1.02] transition-transform duration-200">
                     <Card className="h-full flex flex-col shadow-md hover:shadow-xl transition-shadow">
                         <CardHeader>
-                            <div className="flex justify-between items-start">
-                                <CardTitle className="mb-2">{group.name}</CardTitle>
-                                  <Badge variant={group.status === 'En cours' ? 'default' : 'secondary'} className={group.status === 'En cours' ? 'bg-green-500 text-white' : ''}>
+                            <div className="flex justify-between items-start gap-2">
+                                <div className="flex-1">
+                                    <CardTitle className="mb-1">{group.name}</CardTitle>
+                                     <Badge variant={group.userRole === 'Admin' ? 'destructive' : 'secondary'}>{group.userRole}</Badge>
+                                </div>
+                                <Badge variant={group.status === 'En cours' ? 'default' : 'secondary'} className={group.status === 'En cours' ? 'bg-green-500 text-white shrink-0' : 'shrink-0'}>
                                     {group.status}
                                 </Badge>
                             </div>
-                            <div className="text-sm text-muted-foreground space-y-1">
+                            <div className="text-sm text-muted-foreground space-y-1 pt-2">
                                 <p className="flex items-center"><Crown className="mr-2 h-4 w-4 text-yellow-500"/>Bénéficiaire actuel: <span className="font-semibold ml-1 text-primary">{group.currentBeneficiary?.displayName ?? 'À déterminer'}</span></p>
                                 <p className="flex items-center"><ChevronsRight className="mr-2 h-4 w-4"/>Prochain bénéficiaire: <span className="font-semibold ml-1">{group.nextBeneficiary?.displayName ?? (group.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span></p>
                             </div>
