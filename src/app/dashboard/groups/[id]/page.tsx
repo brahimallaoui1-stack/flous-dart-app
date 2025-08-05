@@ -468,73 +468,145 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         </CardHeader>
         <CardContent>
           {isGroupFull ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Membre</TableHead>
-                    <TableHead>Rôle</TableHead>
-                    <TableHead>Date de réception</TableHead>
-                    <TableHead className="text-right">Statut du paiement</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {members.map((member) => (
-                    <TableRow key={member.id} className={member.id === groupDetails.beneficiary?.id ? 'bg-secondary' : ''}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                            <Avatar><AvatarFallback><User className="h-5 w-5" /></AvatarFallback></Avatar>
-                            <span>{member.displayName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {member.role.includes('Admin') && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
-                          {member.role.includes('Bénéficiaire') && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
-                          {member.role.includes('Moi') && <Badge variant="outline">Moi</Badge>}
-                          {member.role === 'Membre' && <Badge variant="secondary">Membre</Badge>}
-                        </div>
-                      </TableCell>
-                       <TableCell>{member.beneficiaryDate}</TableCell>
-                      <TableCell className="text-right">
-                         <div className="flex items-center justify-end gap-2">
-                           {member.receptionStatus === 'Reçu' ? (
-                                <Badge variant="default" className="bg-green-500 text-white hover:bg-green-600">
-                                    <CheckCircle className="mr-1 h-4 w-4" />
-                                    Reçu
-                                </Badge>
-                           ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id ? (
-                               <AlertDialog>
-                                 <AlertDialogTrigger asChild>
-                                    <Button size="sm">
-                                      <Wallet className="mr-2 h-4 w-4" />
-                                      J'ai reçu
-                                    </Button>
-                                 </AlertDialogTrigger>
-                                 <AlertDialogContent>
-                                   <AlertDialogHeader>
-                                     <AlertDialogTitle>Confirmer la réception</AlertDialogTitle>
-                                     <AlertDialogDescription>
-                                       Êtes-vous sûr de vouloir confirmer que vous avez bien reçu les fonds pour ce tour ? Cette action est irréversible.
-                                     </AlertDialogDescription>
-                                   </AlertDialogHeader>
-                                   <AlertDialogFooter>
-                                     <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                     <AlertDialogAction onClick={() => handleConfirmReception(member.id)}>Confirmer</AlertDialogAction>
-                                   </AlertDialogFooter>
-                                 </AlertDialogContent>
-                               </AlertDialog>
-                           ) : (
-                                <>
-                                    <Clock className="h-5 w-5 text-orange-500" /> 
-                                    <span className="text-orange-500">En attente</span>
-                                </>
-                           )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+            <div>
+              {/* Table for larger screens */}
+              <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Membre</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead>Date de réception</TableHead>
+                        <TableHead className="text-right">Statut du paiement</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {members.map((member) => (
+                        <TableRow key={member.id} className={member.id === groupDetails.beneficiary?.id ? 'bg-secondary' : ''}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                                <Avatar><AvatarFallback><User className="h-5 w-5" /></AvatarFallback></Avatar>
+                                <span>{member.displayName}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {member.role.includes('Admin') && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
+                              {member.role.includes('Bénéficiaire') && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
+                              {member.role.includes('Moi') && <Badge variant="outline">Moi</Badge>}
+                              {member.role === 'Membre' && <Badge variant="secondary">Membre</Badge>}
+                            </div>
+                          </TableCell>
+                           <TableCell>{member.beneficiaryDate}</TableCell>
+                          <TableCell className="text-right">
+                             <div className="flex items-center justify-end gap-2">
+                               {member.receptionStatus === 'Reçu' ? (
+                                    <Badge variant="default" className="bg-green-500 text-white hover:bg-green-600">
+                                        <CheckCircle className="mr-1 h-4 w-4" />
+                                        Reçu
+                                    </Badge>
+                               ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id ? (
+                                   <AlertDialog>
+                                     <AlertDialogTrigger asChild>
+                                        <Button size="sm">
+                                          <Wallet className="mr-2 h-4 w-4" />
+                                          J'ai reçu
+                                        </Button>
+                                     </AlertDialogTrigger>
+                                     <AlertDialogContent>
+                                       <AlertDialogHeader>
+                                         <AlertDialogTitle>Confirmer la réception</AlertDialogTitle>
+                                         <AlertDialogDescription>
+                                           Êtes-vous sûr de vouloir confirmer que vous avez bien reçu les fonds pour ce tour ? Cette action est irréversible.
+                                         </AlertDialogDescription>
+                                       </AlertDialogHeader>
+                                       <AlertDialogFooter>
+                                         <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                         <AlertDialogAction onClick={() => handleConfirmReception(member.id)}>Confirmer</AlertDialogAction>
+                                       </AlertDialogFooter>
+                                     </AlertDialogContent>
+                                   </AlertDialog>
+                               ) : (
+                                    <>
+                                        <Clock className="h-5 w-5 text-orange-500" /> 
+                                        <span className="text-orange-500">En attente</span>
+                                    </>
+                               )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+              </div>
+
+              {/* Cards for mobile screens */}
+              <div className="md:hidden space-y-4">
+                  {members.map(member => (
+                      <Card key={member.id} className={member.id === groupDetails.beneficiary?.id ? 'bg-secondary border-primary' : ''}>
+                          <CardContent className="p-4 space-y-3">
+                              <div className="flex justify-between items-start">
+                                  <div className="flex items-center gap-3">
+                                      <Avatar><AvatarFallback><User className="h-5 w-5" /></AvatarFallback></Avatar>
+                                      <div>
+                                          <p className="font-bold">{member.displayName}</p>
+                                          <div className="flex items-center gap-1 flex-wrap mt-1">
+                                            {member.role.includes('Admin') && <Badge variant="destructive" size="sm"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
+                                            {member.role.includes('Bénéficiaire') && <Badge variant="default" size="sm" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
+                                            {member.role.includes('Moi') && <Badge variant="outline" size="sm">Moi</Badge>}
+                                            {member.role === 'Membre' && <Badge variant="secondary" size="sm">Membre</Badge>}
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                              <div className="text-sm space-y-2">
+                                  <div className="flex justify-between items-center">
+                                      <span className="text-muted-foreground">Réception:</span>
+                                      <span className="font-medium">{member.beneficiaryDate}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                       <span className="text-muted-foreground">Paiement:</span>
+                                       <div className="flex items-center justify-end gap-2">
+                                          {member.receptionStatus === 'Reçu' ? (
+                                                <Badge variant="default" className="bg-green-500 text-white hover:bg-green-600">
+                                                    <CheckCircle className="mr-1 h-4 w-4" />
+                                                    Reçu
+                                                </Badge>
+                                           ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id ? (
+                                               <AlertDialog>
+                                                 <AlertDialogTrigger asChild>
+                                                    <Button size="sm" variant="default">
+                                                      <Wallet className="mr-2 h-4 w-4" />
+                                                      J'ai reçu
+                                                    </Button>
+                                                 </AlertDialogTrigger>
+                                                 <AlertDialogContent>
+                                                   <AlertDialogHeader>
+                                                     <AlertDialogTitle>Confirmer la réception</AlertDialogTitle>
+                                                     <AlertDialogDescription>
+                                                       Êtes-vous sûr de vouloir confirmer que vous avez bien reçu les fonds pour ce tour ? Cette action est irréversible.
+                                                     </AlertDialogDescription>
+                                                   </AlertDialogHeader>
+                                                   <AlertDialogFooter>
+                                                     <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                     <AlertDialogAction onClick={() => handleConfirmReception(member.id)}>Confirmer</AlertDialogAction>
+                                                   </AlertDialogFooter>
+                                                 </AlertDialogContent>
+                                               </AlertDialog>
+                                           ) : (
+                                                <Badge variant="outline" className="text-orange-500 border-orange-500">
+                                                    <Clock className="mr-1 h-4 w-4" /> 
+                                                    En attente
+                                                </Badge>
+                                           )}
+                                        </div>
+                                  </div>
+                              </div>
+                          </CardContent>
+                      </Card>
                   ))}
-                </TableBody>
-              </Table>
+              </div>
+            </div>
           ) : (
             <div className="text-center py-10 px-6 text-muted-foreground">
                 <ShieldQuestion className="mx-auto h-12 w-12 mb-4" />
@@ -546,4 +618,9 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
       </Card>
     </div>
   );
+}
+
+// Custom Badge component with size prop
+const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
+    return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
