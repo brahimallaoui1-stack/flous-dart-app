@@ -14,7 +14,7 @@ import { auth, db } from '@/lib/firebase';
 import { collection, query, where, getDocs, updateDoc, arrayUnion, doc, documentId, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { addMonths, addWeeks, format } from 'date-fns';
+import { addDays, addMonths, addWeeks, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
     AlertDialog,
@@ -39,7 +39,7 @@ interface Group {
     members: string[];
     status: string;
     contribution: number;
-    frequency: 'monthly' | 'weekly';
+    frequency: 'monthly' | 'weekly' | 'bi-weekly';
     currentRound: number;
     totalRounds: number;
     startDate: Date;
@@ -95,6 +95,19 @@ export default function DashboardPage() {
     user ? query(collection(db, 'groups'), where('members', 'array-contains', user.uid)) : null
   );
 
+  const getFrequencyLabel = (frequency: 'monthly' | 'weekly' | 'bi-weekly') => {
+    switch (frequency) {
+        case 'monthly':
+            return 'Mensuel';
+        case 'weekly':
+            return 'Hebdomadaire';
+        case 'bi-weekly':
+            return 'Bi-mensuel';
+        default:
+            return 'N/A';
+    }
+  }
+
   useEffect(() => {
     const processGroups = async () => {
         if (groupsCollection && user) {
@@ -114,7 +127,14 @@ export default function DashboardPage() {
                 const startDate = (data.startDate as Timestamp).toDate();
                 const totalRounds = data.totalRounds || data.members.length;
                 
-                const calcDate = (base: Date, i: number) => data.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
+                const calcDate = (base: Date, i: number) => {
+                    switch(data.frequency) {
+                        case 'weekly': return addWeeks(base, i);
+                        case 'bi-weekly': return addDays(base, i * 15);
+                        case 'monthly': return addMonths(base, i);
+                        default: return addMonths(base, i);
+                    }
+                };
                 const finalReceptionDate = totalRounds > 0 ? calcDate(startDate, totalRounds - 1) : null;
                 
                 const currentBeneficiaryId = data.turnOrder?.[data.currentRound];
@@ -289,7 +309,7 @@ export default function DashboardPage() {
                             </div>
                              <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><Repeat className="mr-2 h-4 w-4"/>Fréquence</span>
-                                <span className="font-bold capitalize">{group.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}</span>
+                                <span className="font-bold capitalize">{getFrequencyLabel(group.frequency)}</span>
                             </div>
                             <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><CircleDollarSign className="mr-2 h-4 w-4"/>Cotisation</span>

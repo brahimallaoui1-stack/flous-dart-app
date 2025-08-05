@@ -40,7 +40,7 @@ const createGroupSchema = z.object({
   groupName: z.string().min(3, 'Le nom doit contenir au moins 3 caractères.'),
   contributionAmount: z.coerce.number({invalid_type_error: "Veuillez entrer un montant valide."}).min(50, { message: 'Le montant minimum de la cotisation est de 50.' }),
   membersNumber: z.coerce.number({invalid_type_error: "Veuillez entrer un nombre valide."}).min(5, { message: 'Il doit y avoir au moins 5 membres.' }),
-  paymentFrequency: z.enum(['monthly', 'weekly'], {
+  paymentFrequency: z.enum(['monthly', 'weekly', 'bi-weekly'], {
     required_error: 'Veuillez sélectionner une fréquence.',
   }),
    startDate: z.date({
@@ -191,6 +191,7 @@ export default function CreateGroupPage() {
                         <SelectContent>
                           <SelectItem value="monthly">Mensuel</SelectItem>
                           <SelectItem value="weekly">Hebdomadaire</SelectItem>
+                          <SelectItem value="bi-weekly">Bi-mensuel (15 jours)</SelectItem>
                         </SelectContent>
                       </Select>
                     <FormMessage />

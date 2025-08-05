@@ -49,7 +49,7 @@ import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, 
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { addMonths, addWeeks, format, isPast, isToday } from 'date-fns';
+import { addDays, addMonths, addWeeks, format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useParams } from 'next/navigation';
@@ -60,7 +60,7 @@ interface GroupDetails {
     name: string;
     membersCount: number;
     contribution: number;
-    frequency: 'monthly' | 'weekly';
+    frequency: 'monthly' | 'weekly' | 'bi-weekly';
     currentRound: number;
     totalRounds: number;
     inviteCode: string;
@@ -142,6 +142,19 @@ export default function GroupDetailPage() {
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
   const { toast } = useToast();
   
+  const getFrequencyLabel = (frequency: 'monthly' | 'weekly' | 'bi-weekly') => {
+    switch (frequency) {
+        case 'monthly':
+            return 'Mois';
+        case 'weekly':
+            return 'Sem';
+        case 'bi-weekly':
+            return '15 jrs';
+        default:
+            return '';
+    }
+  }
+
   const fetchGroupData = useCallback(async () => {
     if (!user || !groupId) return;
     setLoading(true);
@@ -174,7 +187,16 @@ export default function GroupDetailPage() {
 
             const beneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound] : undefined;
             const nextBeneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound + 1] : undefined;
-            const calcDate = (base: Date, i: number) => groupData.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
+            
+            const calcDate = (base: Date, i: number) => {
+                switch(groupData.frequency) {
+                    case 'weekly': return addWeeks(base, i);
+                    case 'bi-weekly': return addDays(base, i * 15);
+                    case 'monthly': return addMonths(base, i);
+                    default: return addMonths(base, i);
+                }
+            };
+
             const finalReceptionDate = groupData.totalRounds > 0 ? calcDate(startDate, groupData.totalRounds - 1) : null;
             const receivedCount = Object.values(groupData.receptionStatus || {}).filter(status => status === 'Reçu').length;
 
@@ -446,7 +468,7 @@ export default function GroupDetailPage() {
                   <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                  <div className="text-2xl font-bold">{groupDetails.contribution} <span className="text-sm text-muted-foreground">MAD / {groupDetails.frequency === 'weekly' ? 'Sem' : 'Mois'}</span></div>
+                  <div className="text-2xl font-bold">{groupDetails.contribution} <span className="text-sm text-muted-foreground">MAD / {getFrequencyLabel(groupDetails.frequency)}</span></div>
               </CardContent>
           </Card>
            <Card className="shadow-md">
