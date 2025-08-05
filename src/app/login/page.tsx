@@ -4,35 +4,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/logo';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
-function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        {...props}
-      >
-        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-        <path d="M12 12.5a3.5 3.5 0 0 0 3.5-3.5h-7a3.5 3.5 0 1 1 7 0c0 1.503-.904 2.79-2.182 3.322" />
-      </svg>
-    );
-}
 
 export default function LoginPage() {
     const router = useRouter();
@@ -40,7 +20,6 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -64,23 +43,6 @@ export default function LoginPage() {
         }
     };
     
-    const handleGoogleLogin = async () => {
-        setIsGoogleLoading(true);
-        try {
-            await signInWithPopup(auth, googleProvider);
-            router.push('/dashboard');
-        } catch (error: any) {
-            console.error("Google login error:", error);
-            toast({
-                variant: "destructive",
-                title: "Erreur de connexion avec Google",
-                description: "Une erreur est survenue. Veuillez réessayer.",
-            });
-        } finally {
-            setIsGoogleLoading(false);
-        }
-    };
-
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-background">
       <Card className="w-full max-w-md shadow-2xl">
@@ -104,7 +66,7 @@ export default function LoginPage() {
                     required 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading || isGoogleLoading}
+                    disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -115,25 +77,17 @@ export default function LoginPage() {
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading || isGoogleLoading}
+                    disabled={isLoading}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button className="w-full" type="submit" disabled={isLoading || isGoogleLoading}>
+              <Button className="w-full" type="submit" disabled={isLoading}>
                 {isLoading ? "Connexion en cours..." : "Connexion"}
               </Button>
-              <div className="relative w-full">
-                <Separator />
-                <span className="absolute left-1/2 -translate-x-1/2 top-[-10px] bg-card px-2 text-sm text-muted-foreground">OU</span>
-              </div>
               </CardFooter>
         </form>
         <div className="px-6 pb-6 flex flex-col gap-4">
-             <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
-                <GoogleIcon className="mr-2 h-4 w-4" />
-                {isGoogleLoading ? "Connexion avec Google..." : "Se connecter avec Google"}
-              </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Vous n'avez pas de compte?{' '}
                 <Link href="/signup" className="underline text-primary hover:text-primary/80">
