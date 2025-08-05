@@ -193,74 +193,19 @@ export default function DashboardPage() {
     <div className="container mx-auto py-8 px-4 md:px-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <h1 className="text-3xl font-bold font-headline tracking-tight">Espace {user?.displayName || 'Membre'}</h1>
-        <Button asChild>
-          <Link href="/dashboard/create">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Créer une nouvelle association
-          </Link>
-        </Button>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-3">
-        <div className="md:col-span-2 md:order-first md:row-span-2">
-            <h2 className="text-2xl font-semibold mb-4">Mes associations</h2>
-            {isLoading && (
-                <div className="flex justify-center items-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="ml-4 text-muted-foreground">Chargement de vos associations...</p>
-                </div>
-            )}
-            {!isLoading && groups.length > 0 ? (
-                <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-                    {groups.map((group) => (
-                    <Link href={`/dashboard/groups/${group.id}`} key={group.id} className="block hover:scale-[1.02] transition-transform duration-200">
-                        <Card className="h-full flex flex-col shadow-md hover:shadow-xl transition-shadow">
-                            <CardHeader>
-                                <div className="flex justify-between items-start">
-                                    <CardTitle className="mb-2">{group.name}</CardTitle>
-                                     <Badge variant={group.status === 'En cours' ? 'default' : 'secondary'} className={group.status === 'En cours' ? 'bg-green-500 text-white' : ''}>
-                                        {group.status}
-                                    </Badge>
-                                </div>
-                                <div className="text-sm text-muted-foreground space-y-1">
-                                    <p className="flex items-center"><Crown className="mr-2 h-4 w-4 text-yellow-500"/>Bénéficiaire actuel: <span className="font-semibold ml-1 text-primary">{group.currentBeneficiary?.displayName ?? 'À déterminer'}</span></p>
-                                    <p className="flex items-center"><ChevronsRight className="mr-2 h-4 w-4"/>Prochain bénéficiaire: <span className="font-semibold ml-1">{group.nextBeneficiary?.displayName ?? (group.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span></p>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="flex-grow space-y-3 text-sm">
-                                <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                                    <span className="flex items-center text-muted-foreground"><Users className="mr-2 h-4 w-4"/>Membres</span>
-                                    <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                                    <span className="flex items-center text-muted-foreground"><CircleDollarSign className="mr-2 h-4 w-4"/>Cotisation</span>
-                                    <span className="font-bold">{group.contribution} MAD</span>
-                                </div>
-                                 <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                                    <span className="flex items-center text-muted-foreground"><Hash className="mr-2 h-4 w-4"/>Montant total</span>
-                                    <span className="font-bold">{group.totalContribution} MAD</span>
-                                </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-between text-xs text-muted-foreground">
-                                <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Début: {format(group.startDate, "dd/MM/yy")}</span>
-                                <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Fin: {group.finalReceptionDate === "N/A" ? "N/A" : format(new Date(group.finalReceptionDate), "dd/MM/yy")}</span>
-                            </CardFooter>
-                        </Card>
-                    </Link>
-                    ))}
-                </div>
-            ) : null}
-             {!isLoading && groups.length === 0 && (
-                <div className="text-center py-12 px-6 bg-card rounded-lg shadow-md">
-                    <h3 className="text-xl font-semibold mb-2">Bienvenue !</h3>
-                    <p className="text-muted-foreground mb-4">Vous ne faites partie d'aucune association pour le moment.</p>
-                    <p className="text-muted-foreground">Créez-en une ou rejoignez un groupe existant avec un code d'invitation.</p>
-                </div>
-            )}
-            {error && <p className="text-destructive">Erreur: {error.message}</p>}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div className="md:col-span-1">
+          <h2 className="text-2xl font-semibold mb-4">Créer un groupe</h2>
+          <Button asChild className="w-full">
+            <Link href="/dashboard/create">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Créer une nouvelle association
+            </Link>
+          </Button>
         </div>
-
-        <div className="md:order-last">
+        <div className="md:col-span-2">
             <h2 className="text-2xl font-semibold mb-4">Rejoindre une association</h2>
             <Card className="shadow-md">
                 <CardHeader>
@@ -284,8 +229,64 @@ export default function DashboardPage() {
             </Card>
         </div>
       </div>
+
+      <div>
+        <h2 className="text-2xl font-semibold mb-4">Mes associations</h2>
+        {isLoading && (
+            <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="ml-4 text-muted-foreground">Chargement de vos associations...</p>
+            </div>
+        )}
+        {!isLoading && groups.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                {groups.map((group) => (
+                <Link href={`/dashboard/groups/${group.id}`} key={group.id} className="block hover:scale-[1.02] transition-transform duration-200">
+                    <Card className="h-full flex flex-col shadow-md hover:shadow-xl transition-shadow">
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <CardTitle className="mb-2">{group.name}</CardTitle>
+                                  <Badge variant={group.status === 'En cours' ? 'default' : 'secondary'} className={group.status === 'En cours' ? 'bg-green-500 text-white' : ''}>
+                                    {group.status}
+                                </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                                <p className="flex items-center"><Crown className="mr-2 h-4 w-4 text-yellow-500"/>Bénéficiaire actuel: <span className="font-semibold ml-1 text-primary">{group.currentBeneficiary?.displayName ?? 'À déterminer'}</span></p>
+                                <p className="flex items-center"><ChevronsRight className="mr-2 h-4 w-4"/>Prochain bénéficiaire: <span className="font-semibold ml-1">{group.nextBeneficiary?.displayName ?? (group.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span></p>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="flex-grow space-y-3 text-sm">
+                            <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                                <span className="flex items-center text-muted-foreground"><Users className="mr-2 h-4 w-4"/>Membres</span>
+                                <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                                <span className="flex items-center text-muted-foreground"><CircleDollarSign className="mr-2 h-4 w-4"/>Cotisation</span>
+                                <span className="font-bold">{group.contribution} MAD</span>
+                            </div>
+                              <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                                <span className="flex items-center text-muted-foreground"><Hash className="mr-2 h-4 w-4"/>Montant total</span>
+                                <span className="font-bold">{group.totalContribution} MAD</span>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Début: {format(group.startDate, "dd/MM/yy")}</span>
+                            <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Fin: {group.finalReceptionDate === "N/A" ? "N/A" : format(new Date(group.finalReceptionDate), "dd/MM/yy")}</span>
+                        </CardFooter>
+                    </Card>
+                </Link>
+                ))}
+            </div>
+        ) : null}
+          {!isLoading && groups.length === 0 && (
+            <div className="text-center py-12 px-6 bg-card rounded-lg shadow-md">
+                <h3 className="text-xl font-semibold mb-2">Bienvenue !</h3>
+                <p className="text-muted-foreground mb-4">Vous ne faites partie d'aucune association pour le moment.</p>
+                <p className="text-muted-foreground">Créez-en une ou rejoignez un groupe existant avec un code d'invitation.</p>
+            </div>
+        )}
+        {error && <p className="text-destructive">Erreur: {error.message}</p>}
+      </div>
     </div>
   );
 }
-
-    
