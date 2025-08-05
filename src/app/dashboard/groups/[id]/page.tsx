@@ -42,7 +42,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, writeBatch } from 'firebase/firestore';
@@ -64,8 +64,11 @@ interface GroupDetails {
     startDate: Date;
     status: string;
     beneficiary?: { id: string, name: string };
+    nextBeneficiary?: { id: string, name: string };
     paymentStatus?: { [key: string]: 'Payé' | 'En attente' };
     receptionStatus?: { [key: string]: 'Reçu' | 'En attente' };
+    totalContribution: number;
+    finalReceptionDate: string;
 }
 
 interface Member {
@@ -158,8 +161,16 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             }
             setTurnOrder(finalTurnOrder);
 
-            const userDetailsMap = await fetchUserDetails(groupData.members);
+            const allUserIds = new Set<string>(groupData.members);
+            if (finalTurnOrder.length > 0) {
+              finalTurnOrder.forEach((id: string) => allUserIds.add(id));
+            }
+            const userDetailsMap = await fetchUserDetails(Array.from(allUserIds));
+
             const beneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound] : undefined;
+            const nextBeneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound + 1] : undefined;
+            const calcDate = (base: Date, i: number) => groupData.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
+            const finalReceptionDate = groupData.totalRounds > 0 ? format(calcDate(startDate, groupData.totalRounds - 1), 'PPP', { locale: fr }) : "N/A";
 
             const group: GroupDetails = {
                 id: groupSnap.id,
@@ -173,8 +184,11 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 startDate: startDate,
                 status: isGroupFull ? 'En cours' : 'En attente',
                 beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
+                nextBeneficiary: nextBeneficiaryId ? { id: nextBeneficiaryId, name: userDetailsMap.get(nextBeneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
                 paymentStatus: groupData.paymentStatus || {},
                 receptionStatus: groupData.receptionStatus || {},
+                totalContribution: groupData.contribution * groupData.totalRounds,
+                finalReceptionDate: finalReceptionDate,
             };
             setGroupDetails(group);
             
@@ -186,7 +200,6 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                     if (beneficiaryId === memberId) roles.push('Bénéficiaire');
                     if (roles.length === 0) roles.push('Membre');
                     
-                    const calcDate = (base: Date, i: number) => group.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
                     const beneficiaryDateObject = calcDate(startDate, index);
                     
                     return {
@@ -337,7 +350,9 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
         <div>
             <h1 className="text-3xl font-bold font-headline tracking-tight">{groupDetails.name}</h1>
-            <p className="text-muted-foreground">{groupDetails.membersCount} / {groupDetails.totalRounds} membres • {groupDetails.contribution} MAD / {groupDetails.frequency === 'weekly' ? 'Hebdomadaire' : 'Mensuel'}</p>
+             <Badge variant={groupDetails.status === 'En cours' ? 'default' : 'secondary'} className={groupDetails.status === 'En cours' ? 'bg-green-500 text-white shrink-0 mt-2' : 'shrink-0 mt-2'}>
+                {groupDetails.status}
+            </Badge>
         </div>
         <div className="flex gap-2 flex-wrap">
              <Button variant="outline" onClick={copyInviteCode}>
@@ -390,18 +405,61 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3 mb-6">
+       <div className="grid gap-6 lg:grid-cols-3 mb-6">
         <Card className="lg:col-span-3 shadow-md">
             <CardHeader>
                 <CardTitle>Progression du cycle</CardTitle>
                 <CardDescription>
-                    Tour {groupDetails.currentRound + 1} sur {groupDetails.totalRounds}. Bénéficiaire actuel: <span className="font-semibold text-primary">{groupDetails.beneficiary?.name || 'A déterminer'}</span>
+                    Tour {groupDetails.currentRound + 1} sur {groupDetails.totalRounds}.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <Progress value={progressPercentage} className="h-4" />
+                 <div className="text-sm text-muted-foreground space-y-1 pt-4">
+                    <p className="flex items-center"><Crown className="mr-2 h-4 w-4 text-yellow-500"/>Bénéficiaire actuel: <span className="font-semibold ml-1 text-primary">{groupDetails.beneficiary?.name ?? 'À déterminer'}</span></p>
+                    <p className="flex items-center"><ChevronsRight className="mr-2 h-4 w-4"/>Prochain bénéficiaire: <span className="font-semibold ml-1">{groupDetails.nextBeneficiary?.name ?? (groupDetails.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span></p>
+                </div>
             </CardContent>
         </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <Card className="shadow-md">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Membres</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                  <div className="text-2xl font-bold">{groupDetails.membersCount} / {groupDetails.totalRounds}</div>
+              </CardContent>
+          </Card>
+           <Card className="shadow-md">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Cotisation</CardTitle>
+                  <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                  <div className="text-2xl font-bold">{groupDetails.contribution} <span className="text-sm text-muted-foreground">MAD / {groupDetails.frequency === 'weekly' ? 'Sem' : 'Mois'}</span></div>
+              </CardContent>
+          </Card>
+           <Card className="shadow-md">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Montant total</CardTitle>
+                  <Hash className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                  <div className="text-2xl font-bold">{groupDetails.totalContribution} <span className="text-sm text-muted-foreground">MAD</span></div>
+              </CardContent>
+          </Card>
+           <Card className="shadow-md">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Période</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                  <div className="text-sm font-bold">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate === "N/A" ? "N/A" : format(new Date(groupDetails.finalReceptionDate), "dd/MM/yy")}</div>
+              </CardContent>
+          </Card>
       </div>
 
       <Card className="shadow-md">
