@@ -28,6 +28,17 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from '@/components/ui/progress';
@@ -438,18 +449,33 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                                     Reçu
                                 </Badge>
                            ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id ? (
-                                <Button
-                                    size="sm"
-                                    onClick={() => handleConfirmReception(member.id)}
-                                    disabled={isConfirmingReception === member.id}
-                                >
-                                    {isConfirmingReception === member.id ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <Wallet className="mr-2 h-4 w-4" />
-                                    )}
-                                    J'ai reçu
-                                </Button>
+                               <AlertDialog>
+                                 <AlertDialogTrigger asChild>
+                                    <Button
+                                        size="sm"
+                                        disabled={isConfirmingReception === member.id}
+                                    >
+                                        {isConfirmingReception === member.id ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Wallet className="mr-2 h-4 w-4" />
+                                        )}
+                                        J'ai reçu
+                                    </Button>
+                                 </AlertDialogTrigger>
+                                 <AlertDialogContent>
+                                   <AlertDialogHeader>
+                                     <AlertDialogTitle>Confirmer la réception</AlertDialogTitle>
+                                     <AlertDialogDescription>
+                                       Êtes-vous sûr de vouloir confirmer que vous avez bien reçu les fonds pour ce tour ? Cette action est irréversible.
+                                     </AlertDialogDescription>
+                                   </AlertDialogHeader>
+                                   <AlertDialogFooter>
+                                     <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                     <AlertDialogAction onClick={() => handleConfirmReception(member.id)}>Confirmer</AlertDialogAction>
+                                   </AlertDialogFooter>
+                                 </AlertDialogContent>
+                               </AlertDialog>
                            ) : (
                                 <>
                                     <Clock className="h-5 w-5 text-orange-500" /> 
