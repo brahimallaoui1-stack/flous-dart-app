@@ -31,14 +31,14 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, writeBatch } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { addMonths, addWeeks, format } from 'date-fns';
+import { addMonths, addWeeks, format, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface GroupDetails {
@@ -53,6 +53,8 @@ interface GroupDetails {
     startDate: Date;
     status: string;
     beneficiary?: { id: string, name: string };
+    paymentStatus?: { [key: string]: 'Payé' | 'En attente' };
+    receptionStatus?: { [key: string]: 'Reçu' | 'En attente' };
 }
 
 interface Member {
@@ -61,7 +63,9 @@ interface Member {
     email: string | null;
     role: 'Admin' | 'Membre' | 'Bénéficiaire' | 'Moi';
     status: 'Payé' | 'En attente';
+    receptionStatus: 'Reçu' | 'En attente';
     beneficiaryDate: string;
+    beneficiaryDateObject: Date;
 }
 
 type UserDetails = {
@@ -115,6 +119,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGivingTurn, setIsGivingTurn] = useState(false);
+  const [isConfirmingReception, setIsConfirmingReception] = useState<string | null>(null);
   const [isGiveTurnDialogOpen, setIsGiveTurnDialogOpen] = useState(false);
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
   const { toast } = useToast();
@@ -158,6 +163,8 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 startDate: startDate,
                 status: isGroupFull ? 'En cours' : 'En attente',
                 beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
+                paymentStatus: groupData.paymentStatus || {},
+                receptionStatus: groupData.receptionStatus || {},
             };
             setGroupDetails(group);
             
@@ -170,14 +177,17 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                     if (roles.length === 0) roles.push('Membre');
                     
                     const calcDate = (base: Date, i: number) => group.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
+                    const beneficiaryDateObject = calcDate(startDate, index);
                     
                     return {
                         id: memberId,
                         displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
                         email: userDetailsMap.get(memberId)?.email || 'email inconnu',
                         role: roles.join(', ') as any,
-                        status: 'En attente',
-                        beneficiaryDate: format(calcDate(startDate, index), 'PPP', { locale: fr }),
+                        status: group.paymentStatus?.[memberId] || 'En attente',
+                        receptionStatus: group.receptionStatus?.[memberId] || 'En attente',
+                        beneficiaryDate: format(beneficiaryDateObject, 'PPP', { locale: fr }),
+                        beneficiaryDateObject,
                     }
                 });
                 setMembers(memberList);
@@ -231,6 +241,28 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         setSelectedMemberToSwap(null);
     }
   };
+
+  const handleConfirmReception = async (memberId: string) => {
+    if (!user || user.uid !== memberId) return;
+
+    setIsConfirmingReception(memberId);
+    try {
+        const groupDocRef = doc(db, 'groups', groupId);
+        // Use dot notation to update a specific field in a map
+        await updateDoc(groupDocRef, {
+            [`receptionStatus.${memberId}`]: 'Reçu'
+        });
+
+        toast({ description: "Vous avez confirmé la réception des fonds !" });
+        await fetchGroupData(); // Refresh data to show updated status
+    } catch (error) {
+        console.error("Error confirming reception:", error);
+        toast({ variant: 'destructive', description: "Une erreur est survenue lors de la confirmation." });
+    } finally {
+        setIsConfirmingReception(null);
+    }
+};
+
   
   const isCurrentUserBeneficiary = user && groupDetails?.beneficiary?.id === user.uid;
   const isLastRound = groupDetails && groupDetails.currentRound >= groupDetails.totalRounds - 1;
@@ -242,7 +274,10 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     if (currentUserIndex === -1) return [];
 
     // Filter members who come after the current user in the turn order
-    return members.filter((member, index) => index > currentUserIndex);
+    return members.filter((member) => {
+        const memberIndex = turnOrder.findIndex(id => id === member.id);
+        return memberIndex > currentUserIndex;
+    });
 
   }, [user, groupDetails, isCurrentUserBeneficiary, isLastRound, turnOrder, members]);
 
@@ -374,7 +409,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                     <TableHead>Membre</TableHead>
                     <TableHead>Rôle</TableHead>
                     <TableHead>Date de réception</TableHead>
-                    <TableHead className="text-right">Statut paiement</TableHead>
+                    <TableHead className="text-right">Statut du paiement</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -396,11 +431,31 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                       </TableCell>
                        <TableCell>{member.beneficiaryDate}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {member.status === 'Payé' ? 
-                            ( <><CheckCircle className="h-5 w-5 text-green-500" /> <span className="text-green-500">Payé</span></> ) : 
-                            ( <><Clock className="h-5 w-5 text-orange-500" /> <span className="text-orange-500">En attente</span></> )
-                          }
+                         <div className="flex items-center justify-end gap-2">
+                           {member.receptionStatus === 'Reçu' ? (
+                                <Badge variant="default" className="bg-green-500 text-white hover:bg-green-600">
+                                    <CheckCircle className="mr-1 h-4 w-4" />
+                                    Reçu
+                                </Badge>
+                           ) : isPast(member.beneficiaryDateObject) && user?.uid === member.id ? (
+                                <Button
+                                    size="sm"
+                                    onClick={() => handleConfirmReception(member.id)}
+                                    disabled={isConfirmingReception === member.id}
+                                >
+                                    {isConfirmingReception === member.id ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Wallet className="mr-2 h-4 w-4" />
+                                    )}
+                                    J'ai reçu
+                                </Button>
+                           ) : (
+                                <>
+                                    <Clock className="h-5 w-5 text-orange-500" /> 
+                                    <span className="text-orange-500">En attente</span>
+                                </>
+                           )}
                         </div>
                       </TableCell>
                     </TableRow>
