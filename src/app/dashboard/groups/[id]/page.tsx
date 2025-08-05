@@ -423,10 +423,6 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             </CardHeader>
             <CardContent>
                 <Progress value={progressPercentage} className="h-4" />
-                 <div className="text-sm text-muted-foreground space-y-1 pt-4">
-                    <p className="flex items-center"><Crown className="mr-2 h-4 w-4 text-yellow-500"/>Bénéficiaire actuel: <span className="font-semibold ml-1 text-primary">{groupDetails.beneficiary?.name ?? 'À déterminer'}</span></p>
-                    <p className="flex items-center"><ChevronsRight className="mr-2 h-4 w-4"/>Prochain bénéficiaire: <span className="font-semibold ml-1">{groupDetails.nextBeneficiary?.name ?? (groupDetails.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span></p>
-                </div>
             </CardContent>
         </Card>
       </div>
@@ -632,3 +628,5 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
+
+    
