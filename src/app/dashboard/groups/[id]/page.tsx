@@ -130,7 +130,6 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGivingTurn, setIsGivingTurn] = useState(false);
-  const [isConfirmingReception, setIsConfirmingReception] = useState(false);
   const [isGiveTurnDialogOpen, setIsGiveTurnDialogOpen] = useState(false);
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
   const { toast } = useToast();
@@ -205,11 +204,11 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             }
 
         } else {
-            toast({ variant: 'destructive', description: "Association non trouvée." });
+            toast({ variant: 'destructive', description: "Groupe non trouvé." });
         }
     } catch (error) {
         console.error("Error fetching group data:", error);
-        toast({ variant: 'destructive', description: "Erreur lors de la récupération des données de l'association." });
+        toast({ variant: 'destructive', description: "Erreur lors de la récupération des données du groupe." });
     } finally {
         setLoading(false);
     }
@@ -307,7 +306,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
       return (
           <div className="container mx-auto py-8 px-4 md:px-6 flex justify-center items-center h-[calc(100vh-200px)]">
              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-             <p className="ml-4 text-muted-foreground">Chargement des détails de l'association...</p>
+             <p className="ml-4 text-muted-foreground">Chargement des détails du groupe...</p>
           </div>
       )
   }
@@ -318,10 +317,10 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             <Button variant="ghost" asChild className="mb-4">
                 <Link href="/dashboard">
                     <ArrowLeft className="mr-2 h-4 w-4"/>
-                    Retour à mes associations
+                    Retour à mes groupes
                 </Link>
             </Button>
-            <p className="text-center text-destructive">Impossible de charger les détails de l'association.</p>
+            <p className="text-center text-destructive">Impossible de charger les détails du groupe.</p>
           </div>
       )
   }
@@ -331,7 +330,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         <Button variant="ghost" asChild className="mb-4">
             <Link href="/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4"/>
-                Retour à mes associations
+                Retour à mes groupes
             </Link>
         </Button>
 
@@ -481,7 +480,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
           ) : (
             <div className="text-center py-10 px-6 text-muted-foreground">
                 <ShieldQuestion className="mx-auto h-12 w-12 mb-4" />
-                <p className="font-semibold">L'ordre de passage sera visible une fois l'association complète.</p>
+                <p className="font-semibold">L'ordre de passage sera visible une fois le groupe complet.</p>
                 <p>En attente de {groupDetails.totalRounds - groupDetails.membersCount} membre(s) supplémentaire(s).</p>
             </div>
           )}

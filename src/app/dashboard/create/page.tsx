@@ -74,7 +74,7 @@ export default function CreateGroupPage() {
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        toast({ variant: 'destructive', description: "Vous avez déjà une association avec ce nom." });
+        toast({ variant: 'destructive', description: "Vous avez déjà un groupe avec ce nom." });
         setIsLoading(false);
         return;
       }
@@ -96,12 +96,12 @@ export default function CreateGroupPage() {
 
       const docRef = await addDoc(collection(db, 'groups'), groupData);
       
-      toast({ description: 'Votre association a été créée avec succès !' });
+      toast({ description: 'Votre groupe a été créé avec succès !' });
       router.push(`/dashboard/groups/${docRef.id}`);
 
     } catch (error) {
       console.error('Error creating group:', error);
-      toast({ variant: 'destructive', description: "Une erreur est survenue lors de la création de l'association." });
+      toast({ variant: 'destructive', description: "Une erreur est survenue lors de la création du groupe." });
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +118,7 @@ export default function CreateGroupPage() {
         </Button>
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">Créer une nouvelle association</CardTitle>
+          <CardTitle className="text-2xl font-headline">Créer un nouveau groupe</CardTitle>
           <CardDescription>
             Remplissez les informations ci-dessous pour démarrer votre nouveau cycle d'épargne.
           </CardDescription>
@@ -131,7 +131,7 @@ export default function CreateGroupPage() {
                   name="groupName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nom de l'association</FormLabel>
+                      <FormLabel>Nom du groupe</FormLabel>
                       <FormControl>
                         <Input placeholder="Ex: Tontine des entrepreneurs" {...field} />
                       </FormControl>

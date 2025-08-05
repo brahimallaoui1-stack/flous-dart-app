@@ -152,7 +152,7 @@ export default function DashboardPage() {
           const querySnapshot = await getDocs(q);
 
           if (querySnapshot.empty) {
-              toast({ variant: 'destructive', description: "Aucune association trouvée avec ce code." });
+              toast({ variant: 'destructive', description: "Aucun groupe trouvé avec ce code." });
               setIsJoining(false);
               return;
           }
@@ -161,13 +161,13 @@ export default function DashboardPage() {
           const groupData = groupDoc.data();
 
           if (groupData.members.includes(user.uid)) {
-              toast({ variant: 'destructive', description: "Vous êtes déjà membre de cette association." });
+              toast({ variant: 'destructive', description: "Vous êtes déjà membre de ce groupe." });
               setIsJoining(false);
               return;
           }
 
           if (groupData.members.length >= groupData.maxMembers) {
-              toast({ variant: 'destructive', description: "Cette association est déjà complète." });
+              toast({ variant: 'destructive', description: "Ce groupe est déjà complet." });
               setIsJoining(false);
               return;
           }
@@ -176,7 +176,7 @@ export default function DashboardPage() {
               members: arrayUnion(user.uid)
           });
 
-          toast({ description: `Vous avez rejoint l'association "${groupData.name}" !` });
+          toast({ description: `Vous avez rejoint le groupe "${groupData.name}" !` });
           router.push(`/dashboard/groups/${groupDoc.id}`);
 
       } catch (err) {
@@ -195,45 +195,42 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold font-headline tracking-tight">Espace {user?.displayName || 'Membre'}</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div className="md:col-span-1">
           <Button asChild className="w-full">
             <Link href="/dashboard/create">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Créer une nouvelle association
+              Créer un nouveau groupe
             </Link>
           </Button>
         </div>
-        <div className="md:col-span-2">
+        <div className="md:col-span-1">
             <Card className="shadow-md">
-                <CardHeader>
-                <CardTitle>Code d'invitation</CardTitle>
-                <CardDescription>Saisissez le code pour rejoindre un groupe existant.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                <Input 
-                    placeholder="Entrez le code..." 
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    disabled={isJoining}
-                />
+                <CardContent className="p-4">
+                  <div className="flex gap-2">
+                    <Input 
+                        placeholder="Code d'invitation..." 
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value)}
+                        disabled={isJoining}
+                        className="flex-grow"
+                    />
+                    <Button onClick={handleJoinGroup} disabled={isJoining} className="shrink-0">
+                        {isJoining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        {isJoining ? '...' : "Rejoindre"}
+                    </Button>
+                  </div>
                 </CardContent>
-                <CardFooter>
-                <Button className="w-full" onClick={handleJoinGroup} disabled={isJoining}>
-                    {isJoining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {isJoining ? 'Recherche...' : "Rejoindre l'association"}
-                </Button>
-                </CardFooter>
             </Card>
         </div>
       </div>
 
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Mes associations</h2>
+        <h2 className="text-2xl font-semibold mb-4">Mes groupes</h2>
         {isLoading && (
             <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="ml-4 text-muted-foreground">Chargement de vos associations...</p>
+                <p className="ml-4 text-muted-foreground">Chargement de vos groupes...</p>
             </div>
         )}
         {!isLoading && groups.length > 0 ? (
@@ -279,8 +276,8 @@ export default function DashboardPage() {
           {!isLoading && groups.length === 0 && (
             <div className="text-center py-12 px-6 bg-card rounded-lg shadow-md">
                 <h3 className="text-xl font-semibold mb-2">Bienvenue !</h3>
-                <p className="text-muted-foreground mb-4">Vous ne faites partie d'aucune association pour le moment.</p>
-                <p className="text-muted-foreground">Créez-en une ou rejoignez un groupe existant avec un code d'invitation.</p>
+                <p className="text-muted-foreground mb-4">Vous ne faites partie d'aucun groupe pour le moment.</p>
+                <p className="text-muted-foreground">Créez-en un ou rejoignez un groupe existant avec un code d'invitation.</p>
             </div>
         )}
         {error && <p className="text-destructive">Erreur: {error.message}</p>}
