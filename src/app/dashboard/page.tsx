@@ -98,7 +98,7 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-        <h1 className="text-3xl font-bold font-headline tracking-tight">Espace Membre</h1>
+        <h1 className="text-3xl font-bold font-headline tracking-tight">Espace {user?.displayName || 'Membre'}</h1>
         <Button asChild>
           <Link href="/dashboard/create">
             <PlusCircle className="mr-2 h-4 w-4" />
