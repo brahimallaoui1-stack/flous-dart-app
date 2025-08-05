@@ -23,6 +23,17 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
 
 
 const createGroupSchema = z.object({
@@ -124,7 +135,7 @@ export default function CreateGroupPage() {
           </CardDescription>
         </CardHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={e => e.preventDefault()}>
             <CardContent className="space-y-6">
                <FormField
                   control={form.control}
@@ -230,9 +241,25 @@ export default function CreateGroupPage() {
               />
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
-                {isLoading ? 'Création en cours...' : 'Créer et inviter des membres'}
-              </Button>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button type="button" className="w-full md:w-auto" disabled={isLoading}>
+                            {isLoading ? 'Création en cours...' : 'Créer et inviter des membres'}
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Avertissement Important</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Pour garantir une transparence et une équité totales, l'ordre de passage des participants sera déterminé de manière automatique et aléatoire une fois que le nombre maximum de membres autorisés aura été atteint.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Rejeter</AlertDialogCancel>
+                        <AlertDialogAction onClick={form.handleSubmit(onSubmit)}>Approuver</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </CardFooter>
           </form>
         </Form>

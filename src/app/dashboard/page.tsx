@@ -16,6 +16,17 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { addMonths, addWeeks, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog";
 
 type UserDetails = {
     displayName: string | null;
@@ -217,10 +228,26 @@ export default function DashboardPage() {
                         disabled={isJoining}
                         className="flex-grow"
                     />
-                    <Button onClick={handleJoinGroup} disabled={isJoining} className="shrink-0">
-                        {isJoining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        {isJoining ? '...' : "Rejoindre"}
-                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                             <Button disabled={isJoining || !inviteCode.trim()} className="shrink-0">
+                                {isJoining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                {isJoining ? '...' : "Rejoindre"}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>Avertissement Important</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Pour garantir une transparence et une équité totales, l'ordre de passage des participants sera déterminé de manière automatique et aléatoire une fois que le nombre maximum de membres autorisés aura été atteint.
+                            </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                            <AlertDialogCancel>Rejeter</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleJoinGroup}>Approuver</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
             </Card>
