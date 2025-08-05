@@ -70,6 +70,7 @@ interface GroupDetails {
     receptionStatus?: { [key: string]: 'Reçu' | 'En attente' };
     totalContribution: number;
     finalReceptionDate: string;
+    receivedCount: number;
 }
 
 interface Member {
@@ -118,7 +119,7 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
 const shuffleArray = (array: any[]) => {
     let currentIndex = array.length, randomIndex;
     while (currentIndex !== 0) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
+      randomIndex = Math.floor(Math.floor(Math.random() * currentIndex));
       currentIndex--;
       [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
     }
@@ -172,6 +173,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             const nextBeneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound + 1] : undefined;
             const calcDate = (base: Date, i: number) => groupData.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
             const finalReceptionDate = groupData.totalRounds > 0 ? format(calcDate(startDate, groupData.totalRounds - 1), 'PPP', { locale: fr }) : "N/A";
+            const receivedCount = Object.values(groupData.receptionStatus || {}).filter(status => status === 'Reçu').length;
 
             const group: GroupDetails = {
                 id: groupSnap.id,
@@ -190,6 +192,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 receptionStatus: groupData.receptionStatus || {},
                 totalContribution: groupData.contribution * groupData.totalRounds,
                 finalReceptionDate: finalReceptionDate,
+                receivedCount: receivedCount
             };
             setGroupDetails(group);
             
@@ -290,7 +293,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const hasUserReceivedFunds = user && groupDetails?.receptionStatus?.[user.uid] === 'Reçu';
 
   const eligibleMembersForSwap = useMemo(() => {
-    if (!user || !groupDetails || !isCurrentUserBeneficiary || isLastRound) return [];
+    if (!user || !groupDetails || !isCurrentUserBeneficiary || isLastRound || hasUserReceivedFunds) return [];
     
     const currentUserIndex = turnOrder.findIndex(id => id === user.uid);
     if (currentUserIndex === -1) return [];
@@ -301,11 +304,11 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         return memberIndex > currentUserIndex;
     });
 
-  }, [user, groupDetails, isCurrentUserBeneficiary, isLastRound, turnOrder, members]);
+  }, [user, groupDetails, isCurrentUserBeneficiary, isLastRound, turnOrder, members, hasUserReceivedFunds]);
 
 
   const progressPercentage = (groupDetails && groupDetails.totalRounds > 0) 
-    ? ((groupDetails.currentRound + 1) / groupDetails.totalRounds) * 100
+    ? (groupDetails.receivedCount / groupDetails.totalRounds) * 100
     : 0;
 
   const copyInviteCode = () => {
@@ -412,7 +415,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
             <CardHeader>
                 <CardTitle>Progression du cycle</CardTitle>
                 <CardDescription>
-                    Tour {groupDetails.currentRound + 1} sur {groupDetails.totalRounds}.
+                    Tour {groupDetails.receivedCount} sur {groupDetails.totalRounds}.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -626,3 +629,5 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
+
+    
