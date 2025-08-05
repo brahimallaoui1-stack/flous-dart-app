@@ -52,6 +52,8 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { addMonths, addWeeks, format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useParams } from 'next/navigation';
+
 
 interface GroupDetails {
     id: string;
@@ -127,8 +129,9 @@ const shuffleArray = (array: any[]) => {
 }
 
 
-export default function GroupDetailPage({ params }: { params: { id: string } }) {
-  const { id: groupId } = params;
+export default function GroupDetailPage() {
+  const params = useParams();
+  const groupId = params.id as string;
   const [user] = useAuthState(auth);
   const [groupDetails, setGroupDetails] = useState<GroupDetails | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
@@ -185,7 +188,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 membersCount: groupData.members.length,
                 inviteCode: groupData.inviteCode,
                 startDate: startDate,
-                status: isGroupFull ? 'En cours' : 'En attente',
+                status: isGroupFull ? 'En cours' : 'En cours',
                 beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'À déterminer' } : undefined,
                 nextBeneficiary: nextBeneficiaryId ? { id: nextBeneficiaryId, name: userDetailsMap.get(nextBeneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
                 paymentStatus: groupData.paymentStatus || {},
@@ -630,4 +633,6 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
 }
 
     
+    
+
     
