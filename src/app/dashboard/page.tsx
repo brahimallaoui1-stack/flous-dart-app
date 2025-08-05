@@ -50,7 +50,7 @@ interface Group {
     currentBeneficiary?: UserDetails;
     nextBeneficiary?: UserDetails;
     totalContribution: number;
-    finalReceptionDate: string;
+    finalReceptionDate: Date | null;
 }
 
 async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDetails>> {
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                 const totalRounds = data.totalRounds || data.members.length;
                 
                 const calcDate = (base: Date, i: number) => data.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
-                const finalReceptionDate = totalRounds > 0 ? format(calcDate(startDate, totalRounds - 1), 'PPP', { locale: fr }) : "N/A";
+                const finalReceptionDate = totalRounds > 0 ? calcDate(startDate, totalRounds - 1) : null;
                 
                 const currentBeneficiaryId = data.turnOrder?.[data.currentRound];
                 const nextBeneficiaryId = data.turnOrder?.[data.currentRound + 1];
@@ -302,7 +302,7 @@ export default function DashboardPage() {
                         </CardContent>
                         <CardFooter className="flex justify-between text-xs text-muted-foreground">
                             <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Début: {format(group.startDate, "dd/MM/yy")}</span>
-                            <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Fin: {group.finalReceptionDate === "N/A" ? "N/A" : format(new Date(group.finalReceptionDate), "dd/MM/yy")}</span>
+                            <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Fin: {group.finalReceptionDate ? format(group.finalReceptionDate, "dd/MM/yy") : 'N/A'}</span>
                         </CardFooter>
                     </Card>
                 </Link>

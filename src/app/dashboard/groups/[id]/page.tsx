@@ -71,7 +71,7 @@ interface GroupDetails {
     paymentStatus?: { [key: string]: 'Payé' | 'En attente' };
     receptionStatus?: { [key: string]: 'Reçu' | 'En attente' };
     totalContribution: number;
-    finalReceptionDate: string;
+    finalReceptionDate: Date | null;
     receivedCount: number;
 }
 
@@ -175,7 +175,7 @@ export default function GroupDetailPage() {
             const beneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound] : undefined;
             const nextBeneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound + 1] : undefined;
             const calcDate = (base: Date, i: number) => groupData.frequency === 'weekly' ? addWeeks(base, i) : addMonths(base, i);
-            const finalReceptionDate = groupData.totalRounds > 0 ? format(calcDate(startDate, groupData.totalRounds - 1), 'PPP', { locale: fr }) : "N/A";
+            const finalReceptionDate = groupData.totalRounds > 0 ? calcDate(startDate, groupData.totalRounds - 1) : null;
             const receivedCount = Object.values(groupData.receptionStatus || {}).filter(status => status === 'Reçu').length;
 
             const group: GroupDetails = {
@@ -188,7 +188,7 @@ export default function GroupDetailPage() {
                 membersCount: groupData.members.length,
                 inviteCode: groupData.inviteCode,
                 startDate: startDate,
-                status: isGroupFull ? 'En cours' : 'En cours',
+                status: isGroupFull ? 'En cours' : 'En attente',
                 beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'À déterminer' } : undefined,
                 nextBeneficiary: nextBeneficiaryId ? { id: nextBeneficiaryId, name: userDetailsMap.get(nextBeneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
                 paymentStatus: groupData.paymentStatus || {},
@@ -464,7 +464,7 @@ export default function GroupDetailPage() {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                  <div className="text-xl font-bold">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate === "N/A" ? "N/A" : format(new Date(groupDetails.finalReceptionDate), "dd/MM/yy")}</div>
+                  <div className="text-xl font-bold">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate ? format(groupDetails.finalReceptionDate, "dd/MM/yy") : 'N/A'}</div>
               </CardContent>
           </Card>
       </div>
@@ -631,8 +631,3 @@ export default function GroupDetailPage() {
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
-
-    
-    
-
-    
