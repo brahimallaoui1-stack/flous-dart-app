@@ -461,7 +461,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                   <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                  <div className="text-sm font-bold">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate === "N/A" ? "N/A" : format(new Date(groupDetails.finalReceptionDate), "dd/MM/yy")}</div>
+                  <div className="text-xl font-bold">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate === "N/A" ? "N/A" : format(new Date(groupDetails.finalReceptionDate), "dd/MM/yy")}</div>
               </CardContent>
           </Card>
       </div>
@@ -629,4 +629,5 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
 
+    
     
