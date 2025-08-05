@@ -104,13 +104,14 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [isGivingTurn, setIsGivingTurn] = useState(false);
   const { toast } = useToast();
+  const groupId = params.id;
   
   const fetchGroupData = useCallback(async () => {
-    if (!params.id) return;
+    if (!groupId) return;
     setLoading(true);
 
     try {
-        const groupDocRef = doc(db, 'groups', params.id);
+        const groupDocRef = doc(db, 'groups', groupId);
         const groupSnap = await getDoc(groupDocRef);
 
         if (groupSnap.exists()) {
@@ -180,7 +181,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     } finally {
         setLoading(false);
     }
-  }, [params.id, toast, user]);
+  }, [groupId, toast, user]);
 
   useEffect(() => {
     fetchGroupData();
@@ -206,7 +207,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         newTurnOrder[currentUserIndex] = nextMemberId;
         newTurnOrder[currentUserIndex + 1] = user.uid;
 
-        await updateDoc(doc(db, 'groups', params.id), {
+        await updateDoc(doc(db, 'groups', groupId), {
             turnOrder: newTurnOrder
         });
 
