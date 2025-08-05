@@ -130,7 +130,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGivingTurn, setIsGivingTurn] = useState(false);
-  const [isConfirmingReception, setIsConfirmingReception] = useState<string | null>(null);
+  const [isConfirmingReception, setIsConfirmingReception] = useState(false);
   const [isGiveTurnDialogOpen, setIsGiveTurnDialogOpen] = useState(false);
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
   const { toast } = useToast();
@@ -256,7 +256,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const handleConfirmReception = async (memberId: string) => {
     if (!user || user.uid !== memberId) return;
 
-    setIsConfirmingReception(memberId);
+    setIsConfirmingReception(true);
     try {
         const groupDocRef = doc(db, 'groups', groupId);
         // Use dot notation to update a specific field in a map
@@ -270,7 +270,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         console.error("Error confirming reception:", error);
         toast({ variant: 'destructive', description: "Une erreur est survenue lors de la confirmation." });
     } finally {
-        setIsConfirmingReception(null);
+        setIsConfirmingReception(false);
     }
 };
 
@@ -453,9 +453,9 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                                  <AlertDialogTrigger asChild>
                                     <Button
                                         size="sm"
-                                        disabled={isConfirmingReception === member.id}
+                                        disabled={isConfirmingReception}
                                     >
-                                        {isConfirmingReception === member.id ? (
+                                        {isConfirmingReception ? (
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         ) : (
                                             <Wallet className="mr-2 h-4 w-4" />
