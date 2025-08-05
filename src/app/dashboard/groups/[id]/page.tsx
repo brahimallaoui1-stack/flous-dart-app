@@ -50,7 +50,6 @@ interface Member {
     email: string | null;
     role: 'Admin' | 'Membre' | 'Bénéficiaire' | 'Moi';
     status: 'Payé' | 'En attente';
-    paymentDate: string;
     beneficiaryDate: string;
 }
 
@@ -177,7 +176,6 @@ export default function GroupDetailPage({ params: { id: groupId } }: { params: {
                         email: userDetailsMap.get(memberId)?.email || 'email inconnu',
                         role: roles.join(', ') as any, // Simple join for display
                         status: 'En attente', // Payment status logic to be implemented separately
-                        paymentDate: format(calcDate(startDate, group.currentRound), 'PPP', { locale: fr }),
                         beneficiaryDate: format(calcDate(startDate, index), 'PPP', { locale: fr }),
                     }
                 });
@@ -325,7 +323,6 @@ export default function GroupDetailPage({ params: { id: groupId } }: { params: {
                     <TableHead>Membre</TableHead>
                     <TableHead>Rôle</TableHead>
                     <TableHead>Date de réception</TableHead>
-                    <TableHead>Prochain paiement</TableHead>
                     <TableHead className="text-right">Statut paiement</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -347,7 +344,6 @@ export default function GroupDetailPage({ params: { id: groupId } }: { params: {
                         </div>
                       </TableCell>
                        <TableCell>{member.beneficiaryDate}</TableCell>
-                       <TableCell>{member.paymentDate}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           {member.status === 'Payé' ? 
