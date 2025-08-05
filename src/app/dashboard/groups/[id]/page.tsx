@@ -38,7 +38,7 @@ import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, 
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { addMonths, addWeeks, format, isPast } from 'date-fns';
+import { addMonths, addWeeks, format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface GroupDetails {
@@ -437,7 +437,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                                     <CheckCircle className="mr-1 h-4 w-4" />
                                     Reçu
                                 </Badge>
-                           ) : isPast(member.beneficiaryDateObject) && user?.uid === member.id ? (
+                           ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id ? (
                                 <Button
                                     size="sm"
                                     onClick={() => handleConfirmReception(member.id)}
@@ -474,5 +474,3 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
-
-    
