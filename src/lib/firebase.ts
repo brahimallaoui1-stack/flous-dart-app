@@ -6,12 +6,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  "projectId": "flous-dart-manager",
-  "appId": "1:1004091828401:web:ca731e7647c4611688da90",
-  "storageBucket": "flous-dart-manager.appspot.com",
-  "apiKey": "AIzaSyDpPib_QcdNZ6OGJ_CiXxLm-9pn_ZCF93Y",
-  "authDomain": "flous-dart-manager.firebaseapp.com",
-  "messagingSenderId": "1004091828401"
+  apiKey: "AIzaSyB-vSYikNziz3tVRpy3206z1XTrTiRJw80",
+  authDomain: "flous-dart-d9832.firebaseapp.com",
+  projectId: "flous-dart-d9832",
+  storageBucket: "flous-dart-d9832.appspot.com",
+  messagingSenderId: "407676989520",
+  appId: "1:407676989520:web:c8413d4965ef6c0cd7a155"
 };
 
 // Initialize Firebase
