@@ -109,7 +109,7 @@ const shuffleArray = (array: any[]) => {
 }
 
 
-export default function GroupDetailPage({ params }: { params: { id: string } }) {
+export default function GroupDetailPage({ params: { id: groupId } }: { params: { id: string } }) {
   const [user] = useAuthState(auth);
   const [groupDetails, setGroupDetails] = useState<GroupDetails | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
@@ -117,7 +117,6 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [isGivingTurn, setIsGivingTurn] = useState(false);
   const { toast } = useToast();
-  const groupId = params.id;
   
   const fetchGroupData = useCallback(async () => {
     if (!user || !groupId) return;
@@ -373,3 +372,5 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
     </div>
   );
 }
+
+    
