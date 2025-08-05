@@ -66,6 +66,8 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
     }
 
     const usersRef = collection(db, 'users');
+    // Firestore 'in' query supports a maximum of 30 elements in the array.
+    // If you expect more members, you'll need to chunk this query.
     const q = query(usersRef, where(documentId(), 'in', userIds.slice(0, 30)));
     const querySnapshot = await getDocs(q);
     
@@ -77,8 +79,10 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
         });
     });
 
+    // Fallback for users not found in the 'users' collection for some reason
     userIds.forEach(id => {
         if (!userDetailsMap.has(id)) {
+            // Provide a default display name, e.g., based on user ID
             userDetailsMap.set(id, { displayName: `Utilisateur ${id.substring(0, 5)}`, email: 'N/A' });
         }
     });
@@ -88,13 +92,22 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
 
 const shuffleArray = (array: any[]) => {
     let currentIndex = array.length, randomIndex;
+
+    // While there remain elements to shuffle.
     while (currentIndex !== 0) {
+
+      // Pick a remaining element.
       randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
-      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
     }
+
     return array;
 }
+
 
 export default function GroupDetailPage({ params }: { params: { id: string } }) {
   const [user] = useAuthState(auth);
@@ -107,7 +120,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
   const groupId = params.id;
   
   const fetchGroupData = useCallback(async () => {
-    if (!groupId) return;
+    if (!user || !groupId) return;
     setLoading(true);
 
     try {
