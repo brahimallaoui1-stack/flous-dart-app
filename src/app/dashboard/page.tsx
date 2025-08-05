@@ -197,7 +197,6 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         <div className="md:col-span-1">
-          <h2 className="text-2xl font-semibold mb-4">Créer un groupe</h2>
           <Button asChild className="w-full">
             <Link href="/dashboard/create">
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -206,7 +205,6 @@ export default function DashboardPage() {
           </Button>
         </div>
         <div className="md:col-span-2">
-            <h2 className="text-2xl font-semibold mb-4">Rejoindre une association</h2>
             <Card className="shadow-md">
                 <CardHeader>
                 <CardTitle>Code d'invitation</CardTitle>
