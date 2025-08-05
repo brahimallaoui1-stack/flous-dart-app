@@ -186,7 +186,7 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
                 inviteCode: groupData.inviteCode,
                 startDate: startDate,
                 status: isGroupFull ? 'En cours' : 'En attente',
-                beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
+                beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'À déterminer' } : undefined,
                 nextBeneficiary: nextBeneficiaryId ? { id: nextBeneficiaryId, name: userDetailsMap.get(nextBeneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
                 paymentStatus: groupData.paymentStatus || {},
                 receptionStatus: groupData.receptionStatus || {},
@@ -414,9 +414,12 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
         <Card className="lg:col-span-3 shadow-md">
             <CardHeader>
                 <CardTitle>Progression du cycle</CardTitle>
-                <CardDescription>
-                    Tour {groupDetails.receivedCount} sur {groupDetails.totalRounds}.
-                </CardDescription>
+                 <div className="flex justify-between items-center pt-1">
+                    <CardDescription>
+                        Tour {groupDetails.receivedCount} sur {groupDetails.totalRounds}.
+                    </CardDescription>
+                    <span className="text-sm font-semibold text-primary">{Math.round(progressPercentage)}%</span>
+                </div>
             </CardHeader>
             <CardContent>
                 <Progress value={progressPercentage} className="h-4" />
@@ -629,5 +632,3 @@ export default function GroupDetailPage({ params }: { params: { id: string } }) 
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
-
-    
