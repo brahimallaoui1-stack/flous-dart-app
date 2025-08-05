@@ -191,7 +191,7 @@ export default function CreateGroupPage() {
                         <SelectContent>
                           <SelectItem value="monthly">Mensuel</SelectItem>
                           <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                          <SelectItem value="bi-weekly">Bi-mensuel (15 jours)</SelectItem>
+                          <SelectItem value="bi-weekly">Bi-mensuel (14 jours)</SelectItem>
                         </SelectContent>
                       </Select>
                     <FormMessage />

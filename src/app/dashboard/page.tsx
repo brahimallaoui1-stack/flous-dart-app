@@ -130,7 +130,7 @@ export default function DashboardPage() {
                 const calcDate = (base: Date, i: number) => {
                     switch(data.frequency) {
                         case 'weekly': return addWeeks(base, i);
-                        case 'bi-weekly': return addDays(base, i * 15);
+                        case 'bi-weekly': return addDays(base, i * 14);
                         case 'monthly': return addMonths(base, i);
                         default: return addMonths(base, i);
                     }

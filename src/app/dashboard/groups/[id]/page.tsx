@@ -60,7 +60,7 @@ interface GroupDetails {
     name: string;
     membersCount: number;
     contribution: number;
-    frequency: 'monthly' | 'weekly' | 'bi-weekly';
+    frequency: 'weekly' | 'bi-weekly' | 'monthly';
     currentRound: number;
     totalRounds: number;
     inviteCode: string;
@@ -142,14 +142,14 @@ export default function GroupDetailPage() {
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const getFrequencyLabel = (frequency: 'monthly' | 'weekly' | 'bi-weekly') => {
+  const getFrequencyLabel = (frequency: 'weekly' | 'bi-weekly' | 'monthly') => {
     switch (frequency) {
         case 'monthly':
             return 'Mois';
         case 'weekly':
             return 'Sem';
         case 'bi-weekly':
-            return '15 jrs';
+            return '14 jrs';
         default:
             return '';
     }
@@ -191,7 +191,7 @@ export default function GroupDetailPage() {
             const calcDate = (base: Date, i: number) => {
                 switch(groupData.frequency) {
                     case 'weekly': return addWeeks(base, i);
-                    case 'bi-weekly': return addDays(base, i * 15);
+                    case 'bi-weekly': return addDays(base, i * 14);
                     case 'monthly': return addMonths(base, i);
                     default: return addMonths(base, i);
                 }
