@@ -30,7 +30,7 @@ export default function Home() {
     setYear(new Date().getFullYear());
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 2000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, []);
