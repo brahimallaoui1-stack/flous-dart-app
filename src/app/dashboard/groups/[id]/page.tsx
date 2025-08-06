@@ -139,8 +139,7 @@ export default function GroupDetailPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isLeaving, setIsLeaving] = useState(false);
-  const [isGivingTurn, setIsGivingTurn] = useState(isLeaving);
+  const [isGivingTurn, setIsGivingTurn] = useState(false);
   const [isGiveTurnDialogOpen, setIsGiveTurnDialogOpen] = useState(false);
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
   const { toast } = useToast();
@@ -266,41 +265,6 @@ export default function GroupDetailPage() {
   useEffect(() => {
     fetchGroupData();
   }, [fetchGroupData]);
-
-  const handleLeaveGroup = async () => {
-    if (!user || !groupDetails || user.uid === groupDetails.adminId) {
-        toast({ variant: 'destructive', description: "Action non autorisée." });
-        return;
-    }
-    setIsLeaving(true);
-    try {
-        // Create notification for the admin
-        await addDoc(collection(db, 'notifications'), {
-            adminId: groupDetails.adminId,
-            type: 'MEMBER_LEFT',
-            message: `${user.displayName || 'Un membre'} a quitté votre groupe : ${groupDetails.name}`,
-            groupId: groupDetails.id,
-            groupName: groupDetails.name,
-            memberId: user.uid,
-            memberName: user.displayName || 'Utilisateur inconnu',
-            createdAt: serverTimestamp(),
-            read: false,
-        });
-
-        const groupDocRef = doc(db, 'groups', groupId);
-        await updateDoc(groupDocRef, {
-            members: arrayRemove(user.uid)
-        });
-        toast({ description: "Vous avez quitté le groupe." });
-        router.push('/dashboard');
-    } catch (error) {
-        console.error("Error leaving group:", error);
-        toast({ variant: 'destructive', description: "Une erreur est survenue." });
-    } finally {
-        setIsLeaving(false);
-    }
-  };
-
 
  const handleConfirmGiveTurn = async () => {
     if (!user || !groupDetails || !selectedMemberToSwap || turnOrder.length < 2) return;
@@ -476,31 +440,6 @@ export default function GroupDetailPage() {
                 </DialogContent>
             </Dialog>
 
-            {!isGroupFull && !isUserAdmin && (
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" disabled={isLeaving}>
-                            <LogOut className="mr-2 h-4 w-4" />
-                            {isLeaving ? 'Départ...' : 'Quitter le groupe'}
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Êtes-vous sûr de vouloir quitter ce groupe ?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Cette action est irréversible.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleLeaveGroup} disabled={isLeaving}>
-                                {isLeaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                Confirmer
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            )}
         </div>
       </div>
 
@@ -722,3 +661,5 @@ export default function GroupDetailPage() {
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
+
+    
