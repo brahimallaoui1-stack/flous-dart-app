@@ -21,7 +21,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { signOut } from 'firebase/auth';
 import React from 'react';
-import { collection, query, where, orderBy, limit, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, doc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -80,9 +80,16 @@ export default function DashboardLayout({
     if (!user || notifications.length === 0) return;
     const batch = writeBatch(db);
     notifications.forEach(notification => {
-        const notifRef = doc(db, "notifications", notification.id);
-        batch.delete(notifRef);
+        if(notification.read) { // Example logic: only delete read notifications, or remove this if to delete all
+            const notifRef = doc(db, "notifications", notification.id);
+            batch.delete(notifRef);
+        }
     });
+    // Or to delete all regardless of status
+    notificationsSnapshot?.docs.forEach(d => {
+        batch.delete(d.ref);
+    });
+
     await batch.commit();
   }
 
