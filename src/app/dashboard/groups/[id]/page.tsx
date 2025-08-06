@@ -42,10 +42,10 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight, LogOut } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, writeBatch, arrayRemove, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -139,6 +139,7 @@ export default function GroupDetailPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isGivingTurn, setIsGivingTurn] = useState(false);
   const [isGiveTurnDialogOpen, setIsGiveTurnDialogOpen] = useState(false);
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
@@ -318,6 +319,22 @@ export default function GroupDetailPage() {
     }
 };
 
+ const handleDeleteGroup = async () => {
+    if (!user || !groupDetails || user.uid !== groupDetails.adminId) return;
+
+    setIsDeleting(true);
+    try {
+        const groupDocRef = doc(db, 'groups', groupId);
+        await deleteDoc(groupDocRef);
+        toast({ description: "Le groupe a été supprimé avec succès." });
+        router.push('/dashboard');
+    } catch (error) {
+        console.error("Error deleting group:", error);
+        toast({ variant: 'destructive', description: "Une erreur est survenue lors de la suppression du groupe." });
+        setIsDeleting(false);
+    }
+  };
+
   
   const isCurrentUserBeneficiary = user && groupDetails?.beneficiary?.id === user.uid;
   const isLastRound = groupDetails && groupDetails.currentRound >= groupDetails.totalRounds - 1;
@@ -439,6 +456,29 @@ export default function GroupDetailPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+             {isUserAdmin && !isGroupFull && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={isDeleting}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {isDeleting ? 'Suppression...' : 'Supprimer le groupe'}
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce groupe ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Cette action est irréversible et supprimera toutes les données associées au groupe.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteGroup}>Confirmer la suppression</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
 
         </div>
       </div>
