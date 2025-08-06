@@ -68,13 +68,16 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
-  const markAsRead = async (notificationId: string) => {
-    const notifRef = doc(db, 'notifications', notificationId);
-    await updateDoc(notifRef, { read: true });
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+        const notifRef = doc(db, 'notifications', notification.id);
+        await updateDoc(notifRef, { read: true });
+    }
+    router.push(`/dashboard/groups/${notification.groupId}`);
   };
   
   const clearAllNotifications = async () => {
-    if (!user) return;
+    if (!user || notifications.length === 0) return;
     const batch = writeBatch(db);
     notifications.forEach(notification => {
         const notifRef = doc(db, "notifications", notification.id);
@@ -131,13 +134,11 @@ export default function DashboardLayout({
                 <DropdownMenuGroup>
                   {notifications.length > 0 ? (
                     notifications.map(n => (
-                      <DropdownMenuItem key={n.id} onClick={() => markAsRead(n.id)} className={`flex flex-col items-start gap-1 ${!n.read ? 'bg-secondary' : ''}`}>
-                        <Link href={`/dashboard/groups/${n.groupId}`} className="w-full">
+                      <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n)} className={`flex flex-col items-start gap-1 cursor-pointer ${!n.read ? 'bg-secondary' : ''}`}>
                           <p className="text-sm whitespace-normal">{n.message}</p>
                           <p className="text-xs text-muted-foreground">
                             {n.createdAt ? formatDistanceToNow(n.createdAt.toDate(), { addSuffix: true, locale: fr }) : ''}
                           </p>
-                        </Link>
                       </DropdownMenuItem>
                     ))
                   ) : (
