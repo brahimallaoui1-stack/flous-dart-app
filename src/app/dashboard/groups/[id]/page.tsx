@@ -45,7 +45,7 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, writeBatch, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, writeBatch, arrayRemove, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -274,6 +274,19 @@ export default function GroupDetailPage() {
     }
     setIsLeaving(true);
     try {
+        // Create notification for the admin
+        await addDoc(collection(db, 'notifications'), {
+            adminId: groupDetails.adminId,
+            type: 'MEMBER_LEFT',
+            message: `${user.displayName || 'Un membre'} a quitté votre groupe : ${groupDetails.name}`,
+            groupId: groupDetails.id,
+            groupName: groupDetails.name,
+            memberId: user.uid,
+            memberName: user.displayName || 'Utilisateur inconnu',
+            createdAt: serverTimestamp(),
+            read: false,
+        });
+
         const groupDocRef = doc(db, 'groups', groupId);
         await updateDoc(groupDocRef, {
             members: arrayRemove(user.uid)
@@ -709,4 +722,3 @@ export default function GroupDetailPage() {
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
-
