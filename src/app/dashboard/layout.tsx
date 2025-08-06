@@ -11,28 +11,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/icons/logo';
-import { LogOut, User, Bell, Trash2 } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollection } from 'react-firebase-hooks/firestore';
 import { signOut } from 'firebase/auth';
 import React from 'react';
-import { collection, query, where, orderBy, limit, doc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore';
-import { Badge } from '@/components/ui/badge';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
-
-interface Notification {
-  id: string;
-  message: string;
-  createdAt: any;
-  read: boolean;
-  groupId: string;
-}
 
 export default function DashboardLayout({
   children,
@@ -42,56 +28,10 @@ export default function DashboardLayout({
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
 
-  const notificationsQuery = user
-    ? query(
-        collection(db, 'notifications'),
-        where('adminId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        limit(10)
-      )
-    : null;
-
-  const [notificationsSnapshot] = useCollection(notificationsQuery);
-
-  const notifications: Notification[] = React.useMemo(() => {
-    if (!notificationsSnapshot) return [];
-    return notificationsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    } as Notification));
-  }, [notificationsSnapshot]);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
   const handleLogout = async () => {
     await signOut(auth);
     router.push('/login');
   };
-
-  const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.read) {
-        const notifRef = doc(db, 'notifications', notification.id);
-        await updateDoc(notifRef, { read: true });
-    }
-    router.push(`/dashboard/groups/${notification.groupId}`);
-  };
-  
-  const clearAllNotifications = async () => {
-    if (!user || notifications.length === 0) return;
-    const batch = writeBatch(db);
-    notifications.forEach(notification => {
-        if(notification.read) { // Example logic: only delete read notifications, or remove this if to delete all
-            const notifRef = doc(db, "notifications", notification.id);
-            batch.delete(notifRef);
-        }
-    });
-    // Or to delete all regardless of status
-    notificationsSnapshot?.docs.forEach(d => {
-        batch.delete(d.ref);
-    });
-
-    await batch.commit();
-  }
 
   React.useEffect(() => {
     if (!loading && !user) {
@@ -116,49 +56,6 @@ export default function DashboardLayout({
             <span className="text-xl font-bold text-foreground font-headline">Flous Dart</span>
           </Link>
           <div className="flex items-center gap-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 justify-center rounded-full p-0">{unreadCount}</Badge>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80" align="end">
-                <DropdownMenuLabel>
-                    <div className="flex justify-between items-center">
-                        <span>Notifications</span>
-                        {notifications.length > 0 && (
-                            <Button variant="ghost" size="sm" onClick={clearAllNotifications} className="text-xs">
-                                <Trash2 className="mr-1 h-3 w-3"/>
-                                Vider
-                            </Button>
-                        )}
-                    </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  {notifications.length > 0 ? (
-                    notifications.map(n => (
-                      <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n)} onSelect={(e) => e.preventDefault()} className={`flex flex-col items-start gap-1 cursor-pointer ${!n.read ? 'bg-secondary' : ''}`}>
-                          <p className="text-sm whitespace-normal">{n.message}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {n.createdAt ? formatDistanceToNow(n.createdAt.toDate(), { addSuffix: true, locale: fr }) : ''}
-                          </p>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <DropdownMenuItem disabled>
-                      <p className="text-sm text-center text-muted-foreground py-4">
-                        Aucune notification pour le moment.
-                      </p>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
