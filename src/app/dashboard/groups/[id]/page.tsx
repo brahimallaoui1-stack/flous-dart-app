@@ -42,17 +42,17 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, writeBatch, arrayRemove } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { addDays, addMonths, addWeeks, format, isPast, isToday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 
 interface GroupDetails {
@@ -66,6 +66,7 @@ interface GroupDetails {
     inviteCode: string;
     startDate: Date;
     status: string;
+    adminId: string;
     beneficiary?: { id: string, name: string };
     nextBeneficiary?: { id: string, name: string };
     paymentStatus?: { [key: string]: 'Payé' | 'En attente' };
@@ -131,13 +132,15 @@ const shuffleArray = (array: any[]) => {
 
 export default function GroupDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const groupId = params.id as string;
   const [user] = useAuthState(auth);
   const [groupDetails, setGroupDetails] = useState<GroupDetails | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isGivingTurn, setIsGivingTurn] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [isGivingTurn, setIsGivingTurn] = useState(isLeaving);
   const [isGiveTurnDialogOpen, setIsGiveTurnDialogOpen] = useState(false);
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
   const { toast } = useToast();
@@ -210,6 +213,7 @@ export default function GroupDetailPage() {
                 membersCount: groupData.members.length,
                 inviteCode: groupData.inviteCode,
                 startDate: startDate,
+                adminId: groupData.admin,
                 status: isGroupFull ? 'En cours' : 'En attente',
                 beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'À déterminer' } : undefined,
                 nextBeneficiary: nextBeneficiaryId ? { id: nextBeneficiaryId, name: userDetailsMap.get(nextBeneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
@@ -221,29 +225,32 @@ export default function GroupDetailPage() {
             };
             setGroupDetails(group);
             
-            if (isGroupFull) {
-                const memberList: Member[] = finalTurnOrder.map((memberId: string, index: number) => {
-                    let roles: ('Admin' | 'Membre' | 'Bénéficiaire' | 'Moi')[] = [];
-                    if (groupData.admin === memberId) roles.push('Admin');
-                    if (user && user.uid === memberId) roles.push('Moi');
-                    if (beneficiaryId === memberId) roles.push('Bénéficiaire');
-                    if (roles.length === 0) roles.push('Membre');
-                    
-                    const beneficiaryDateObject = calcDate(startDate, index);
-                    
-                    return {
-                        id: memberId,
-                        displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
-                        email: userDetailsMap.get(memberId)?.email || 'email inconnu',
-                        role: roles.join(', ') as any,
-                        status: group.paymentStatus?.[memberId] || 'En attente',
-                        receptionStatus: group.receptionStatus?.[memberId] || 'En attente',
-                        beneficiaryDate: format(beneficiaryDateObject, 'PPP', { locale: fr }),
-                        beneficiaryDateObject,
-                    }
-                });
-                setMembers(memberList);
-            }
+            // This member list is only relevant if the group is full and turns are set
+            // For incomplete groups, we might need a different list.
+            const membersToShow = isGroupFull ? finalTurnOrder : groupData.members;
+
+            const memberList: Member[] = membersToShow.map((memberId: string, index: number) => {
+                let roles: ('Admin' | 'Membre' | 'Bénéficiaire' | 'Moi')[] = [];
+                if (groupData.admin === memberId) roles.push('Admin');
+                if (user && user.uid === memberId) roles.push('Moi');
+                if (beneficiaryId === memberId) roles.push('Bénéficiaire');
+                if (roles.length === 0) roles.push('Membre');
+                
+                const beneficiaryDateObject = isGroupFull ? calcDate(startDate, index) : new Date();
+                
+                return {
+                    id: memberId,
+                    displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
+                    email: userDetailsMap.get(memberId)?.email || 'email inconnu',
+                    role: roles.join(', ') as any,
+                    status: group.paymentStatus?.[memberId] || 'En attente',
+                    receptionStatus: group.receptionStatus?.[memberId] || 'En attente',
+                    beneficiaryDate: isGroupFull ? format(beneficiaryDateObject, 'PPP', { locale: fr }) : "Non déterminé",
+                    beneficiaryDateObject,
+                }
+            });
+            setMembers(memberList);
+
 
         } else {
             toast({ variant: 'destructive', description: "Groupe non trouvé." });
@@ -259,6 +266,28 @@ export default function GroupDetailPage() {
   useEffect(() => {
     fetchGroupData();
   }, [fetchGroupData]);
+
+  const handleLeaveGroup = async () => {
+    if (!user || !groupDetails || user.uid === groupDetails.adminId) {
+        toast({ variant: 'destructive', description: "Action non autorisée." });
+        return;
+    }
+    setIsLeaving(true);
+    try {
+        const groupDocRef = doc(db, 'groups', groupId);
+        await updateDoc(groupDocRef, {
+            members: arrayRemove(user.uid)
+        });
+        toast({ description: "Vous avez quitté le groupe." });
+        router.push('/dashboard');
+    } catch (error) {
+        console.error("Error leaving group:", error);
+        toast({ variant: 'destructive', description: "Une erreur est survenue." });
+    } finally {
+        setIsLeaving(false);
+    }
+  };
+
 
  const handleConfirmGiveTurn = async () => {
     if (!user || !groupDetails || !selectedMemberToSwap || turnOrder.length < 2) return;
@@ -344,6 +373,8 @@ export default function GroupDetailPage() {
   }
 
   const isGroupFull = groupDetails && groupDetails.membersCount === groupDetails.totalRounds;
+  const isUserAdmin = user && groupDetails && user.uid === groupDetails.adminId;
+
 
   if (loading) {
       return (
@@ -432,6 +463,31 @@ export default function GroupDetailPage() {
                 </DialogContent>
             </Dialog>
 
+            {!isGroupFull && !isUserAdmin && (
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={isLeaving}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            {isLeaving ? 'Départ...' : 'Quitter le groupe'}
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Êtes-vous sûr de vouloir quitter ce groupe ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Cette action est irréversible.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleLeaveGroup} disabled={isLeaving}>
+                                {isLeaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Confirmer
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </div>
       </div>
 
@@ -653,3 +709,4 @@ export default function GroupDetailPage() {
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
+
