@@ -6,35 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/icons/logo';
 import { useEffect, useState } from 'react';
 
-function SplashScreen() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-4 animate-fadeIn">
-      <h1 className="text-4xl md:text-6xl font-bold font-headline text-foreground tracking-tight mt-6">
-        Flous Dart
-      </h1>
-      <p className="text-lg md:text-xl text-muted-foreground mt-2">
-        Bienvenue dans votre solution d'épargne.
-      </p>
-    </div>
-  )
-}
-
 export default function Home() {
   const [year, setYear] = useState(new Date().getFullYear());
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setYear(new Date().getFullYear());
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 5000);
-
-    return () => clearTimeout(timer);
   }, []);
-
-  if (loading) {
-    return <SplashScreen />;
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background animate-fadeIn">
