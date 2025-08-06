@@ -9,9 +9,6 @@ import { useEffect, useState } from 'react';
 function SplashScreen() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background text-center p-4 animate-fadeIn">
-      <div className="animate-scaleIn">
-        <Logo className="h-24 w-24 md:h-32 md:w-32 text-primary" />
-      </div>
       <h1 className="text-4xl md:text-6xl font-bold font-headline text-foreground tracking-tight mt-6">
         Flous Dart
       </h1>
