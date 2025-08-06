@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 export const metadata: Metadata = {
   title: 'Flous Dart Manager',
   description: 'Gérez vos cycles d\'épargne collective numériquement et en toute sécurité.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
