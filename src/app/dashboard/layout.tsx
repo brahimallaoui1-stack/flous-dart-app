@@ -134,7 +134,7 @@ export default function DashboardLayout({
                 <DropdownMenuGroup>
                   {notifications.length > 0 ? (
                     notifications.map(n => (
-                      <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n)} className={`flex flex-col items-start gap-1 cursor-pointer ${!n.read ? 'bg-secondary' : ''}`}>
+                      <DropdownMenuItem key={n.id} onClick={() => handleNotificationClick(n)} onSelect={(e) => e.preventDefault()} className={`flex flex-col items-start gap-1 cursor-pointer ${!n.read ? 'bg-secondary' : ''}`}>
                           <p className="text-sm whitespace-normal">{n.message}</p>
                           <p className="text-xs text-muted-foreground">
                             {n.createdAt ? formatDistanceToNow(n.createdAt.toDate(), { addSuffix: true, locale: fr }) : ''}
