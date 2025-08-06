@@ -9,6 +9,7 @@ export const Logo = (props: React.ComponentProps<'div'>) => (
       alt="Flous Dart Logo"
       width={64}
       height={64}
+      priority
       className="h-full w-full"
     />
   </div>
