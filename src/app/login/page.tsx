@@ -88,15 +88,15 @@ export default function LoginPage() {
               </CardFooter>
         </form>
         <div className="px-6 pb-6 flex flex-col gap-4 text-center">
-             <p className="text-sm text-muted-foreground">
-                <Link href="/how-it-works" className="underline text-primary hover:text-primary/80">
-                  Comment ça marche ?
-                </Link>
-              </p>
               <p className="text-sm text-muted-foreground">
                 Vous n'avez pas de compte?{' '}
                 <Link href="/signup" className="underline text-primary hover:text-primary/80">
                   Créer un compte
+                </Link>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <Link href="/how-it-works" className="underline text-primary hover:text-primary/80">
+                  Comment ça marche ?
                 </Link>
               </p>
         </div>
