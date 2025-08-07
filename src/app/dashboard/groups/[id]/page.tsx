@@ -110,12 +110,6 @@ async function fetchUserDetails(userIds: string[]): Promise<Map<string, UserDeta
         });
     });
 
-    userIds.forEach(id => {
-        if (!userDetailsMap.has(id)) {
-            userDetailsMap.set(id, { displayName: `Utilisateur ${id.substring(0, 5)}`, email: 'N/A' });
-        }
-    });
-
     return userDetailsMap;
 }
 
