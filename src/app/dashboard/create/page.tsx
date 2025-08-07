@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +54,19 @@ function generateInviteCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+function createGroupId(name: string) {
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    const sanitizedName = name
+        .toLowerCase()
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(/[^\w-]+/g, '') // Remove all non-word chars
+        .replace(/--+/g, '-') // Replace multiple - with single -
+        .replace(/^-+/, '') // Trim - from start of text
+        .replace(/-+$/, ''); // Trim - from end of text
+    return `${sanitizedName}-${randomSuffix}`;
+}
+
+
 export default function CreateGroupPage() {
   const [user] = useAuthState(auth);
   const router = useRouter();
@@ -90,6 +103,17 @@ export default function CreateGroupPage() {
         return;
       }
 
+      const groupId = createGroupId(data.groupName);
+      const groupDocRef = doc(db, 'groups', groupId);
+
+      // Although highly unlikely, check if the generated ID already exists
+      const docSnap = await getDoc(groupDocRef);
+      if (docSnap.exists()) {
+           toast({ variant: 'destructive', description: "Erreur lors de la génération de l'identifiant du groupe. Veuillez réessayer." });
+           setIsLoading(false);
+           return;
+      }
+
       const groupData = {
         name: data.groupName,
         contribution: data.contributionAmount,
@@ -103,12 +127,15 @@ export default function CreateGroupPage() {
         inviteCode: generateInviteCode(),
         currentRound: 0,
         totalRounds: data.membersNumber,
+        turnOrder: [],
+        receptionStatus: {},
+        paymentStatus: {}
       };
 
-      const docRef = await addDoc(collection(db, 'groups'), groupData);
+      await setDoc(groupDocRef, groupData);
       
       toast({ description: 'Votre groupe a été créé avec succès !' });
-      router.push(`/dashboard/groups/${docRef.id}`);
+      router.push(`/dashboard/groups/${groupDocRef.id}`);
 
     } catch (error) {
       console.error('Error creating group:', error);
