@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { addDays, addMonths, addWeeks, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -37,7 +38,7 @@ interface Group {
     id: string;
     name: string;
     members: string[];
-    status: string;
+    status: 'En attente' | 'En cours' | 'Terminé';
     contribution: number;
     frequency: 'monthly' | 'weekly' | 'bi-weekly';
     currentRound: number;
@@ -108,6 +109,18 @@ export default function DashboardPage() {
     }
   }
 
+  const getStatusBadgeVariant = (status: 'En attente' | 'En cours' | 'Terminé') => {
+    switch (status) {
+        case 'En cours':
+            return 'bg-green-500 text-white hover:bg-green-600';
+        case 'Terminé':
+            return 'bg-gray-500 text-white hover:bg-gray-600';
+        case 'En attente':
+        default:
+            return 'secondary';
+    }
+}
+
   useEffect(() => {
     const processGroups = async () => {
         if (groupsCollection && user) {
@@ -126,7 +139,8 @@ export default function DashboardPage() {
                 const data = doc.data();
                 const startDate = (data.startDate as Timestamp).toDate();
                 const totalRounds = data.totalRounds || data.members.length;
-                
+                const receivedCount = Object.values(data.receptionStatus || {}).filter(status => status === 'Reçu').length;
+
                 const calcDate = (base: Date, i: number) => {
                     switch(data.frequency) {
                         case 'weekly': return addWeeks(base, i);
@@ -137,8 +151,9 @@ export default function DashboardPage() {
                 };
                 const finalReceptionDate = totalRounds > 0 ? calcDate(startDate, totalRounds - 1) : null;
                 
-                const currentBeneficiaryId = data.turnOrder?.[data.currentRound];
-                const nextBeneficiaryId = data.turnOrder?.[data.currentRound + 1];
+                const currentRound = receivedCount;
+                const currentBeneficiaryId = data.turnOrder?.[currentRound];
+                const nextBeneficiaryId = data.turnOrder?.[currentRound + 1];
 
                 return {
                     id: doc.id,
@@ -147,7 +162,7 @@ export default function DashboardPage() {
                     status: data.status,
                     contribution: data.contribution,
                     frequency: data.frequency,
-                    currentRound: data.currentRound,
+                    currentRound: currentRound,
                     totalRounds: totalRounds,
                     startDate: startDate,
                     turnOrder: data.turnOrder || [],
@@ -293,12 +308,12 @@ export default function DashboardPage() {
                                     <CardTitle className="mb-1">{group.name}</CardTitle>
                                      <Badge variant={group.userRole === 'Admin' ? 'destructive' : 'secondary'}>{group.userRole}</Badge>
                                 </div>
-                                <Badge variant={group.status === 'En cours' ? 'default' : 'secondary'} className={group.status === 'En cours' ? 'bg-green-500 text-white shrink-0' : 'shrink-0'}>
+                                <Badge variant={'default'} className={cn('shrink-0', getStatusBadgeVariant(group.status))}>
                                     {group.status}
                                 </Badge>
                             </div>
                             <div className="text-sm text-muted-foreground space-y-1 pt-2">
-                                <p className="flex items-center"><Crown className="mr-2 h-4 w-4 text-yellow-500"/>Bénéficiaire actuel: <span className="font-semibold ml-1 text-primary">{group.currentBeneficiary?.displayName ?? 'À déterminer'}</span></p>
+                                <p className="flex items-center"><Crown className="mr-2 h-4 w-4 text-yellow-500"/>Bénéficiaire actuel: <span className="font-semibold ml-1 text-primary">{group.status === 'Terminé' ? 'Aucun' : group.currentBeneficiary?.displayName ?? 'À déterminer'}</span></p>
                                 <p className="flex items-center"><ChevronsRight className="mr-2 h-4 w-4"/>Prochain bénéficiaire: <span className="font-semibold ml-1">{group.nextBeneficiary?.displayName ?? (group.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span></p>
                             </div>
                         </CardHeader>
@@ -341,3 +356,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

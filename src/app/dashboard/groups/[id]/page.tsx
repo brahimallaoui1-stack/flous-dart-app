@@ -65,7 +65,7 @@ interface GroupDetails {
     totalRounds: number;
     inviteCode: string;
     startDate: Date;
-    status: string;
+    status: 'En attente' | 'En cours' | 'Terminé';
     adminId: string;
     beneficiary?: { id: string, name: string };
     nextBeneficiary?: { id: string, name: string };
@@ -170,16 +170,26 @@ export default function GroupDetailPage() {
             const groupData = groupSnap.data();
             const startDate = (groupData.startDate as Timestamp).toDate();
             const isGroupFull = groupData.members.length === groupData.maxMembers;
-            
+            const receivedCount = Object.values(groupData.receptionStatus || {}).filter(status => status === 'Reçu').length;
+            const isCycleFinished = receivedCount === groupData.totalRounds && groupData.totalRounds > 0;
+
             let finalTurnOrder = groupData.turnOrder || [];
-            
+            let currentStatus = groupData.status;
+
             if (isGroupFull && (!groupData.turnOrder || groupData.turnOrder.length === 0)) {
                 finalTurnOrder = shuffleArray([...groupData.members]);
                 await updateDoc(groupDocRef, { 
                     turnOrder: finalTurnOrder,
                     status: 'En cours'
                 });
+                currentStatus = 'En cours';
             }
+
+            if (isCycleFinished && groupData.status !== 'Terminé') {
+                await updateDoc(groupDocRef, { status: 'Terminé' });
+                currentStatus = 'Terminé';
+            }
+            
             setTurnOrder(finalTurnOrder);
 
             const allUserIds = new Set<string>(groupData.members);
@@ -187,9 +197,10 @@ export default function GroupDetailPage() {
               finalTurnOrder.forEach((id: string) => allUserIds.add(id));
             }
             const userDetailsMap = await fetchUserDetails(Array.from(allUserIds));
-
-            const beneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound] : undefined;
-            const nextBeneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[groupData.currentRound + 1] : undefined;
+            
+            const currentRound = receivedCount;
+            const beneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[currentRound] : undefined;
+            const nextBeneficiaryId = finalTurnOrder.length > 0 ? finalTurnOrder[currentRound + 1] : undefined;
             
             const calcDate = (base: Date, i: number) => {
                 switch(groupData.frequency) {
@@ -201,20 +212,19 @@ export default function GroupDetailPage() {
             };
 
             const finalReceptionDate = groupData.totalRounds > 0 ? calcDate(startDate, groupData.totalRounds - 1) : null;
-            const receivedCount = Object.values(groupData.receptionStatus || {}).filter(status => status === 'Reçu').length;
-
+            
             const group: GroupDetails = {
                 id: groupSnap.id,
                 name: groupData.name,
                 contribution: groupData.contribution,
                 frequency: groupData.frequency,
-                currentRound: groupData.currentRound,
+                currentRound: currentRound,
                 totalRounds: groupData.totalRounds,
                 membersCount: groupData.members.length,
                 inviteCode: groupData.inviteCode,
                 startDate: startDate,
                 adminId: groupData.admin,
-                status: isGroupFull ? 'En cours' : 'En attente',
+                status: currentStatus,
                 beneficiary: beneficiaryId ? { id: beneficiaryId, name: userDetailsMap.get(beneficiaryId)?.displayName ?? 'À déterminer' } : undefined,
                 nextBeneficiary: nextBeneficiaryId ? { id: nextBeneficiaryId, name: userDetailsMap.get(nextBeneficiaryId)?.displayName ?? 'A déterminer' } : undefined,
                 paymentStatus: groupData.paymentStatus || {},
@@ -225,9 +235,7 @@ export default function GroupDetailPage() {
             };
             setGroupDetails(group);
             
-            // This member list is only relevant if the group is full and turns are set
-            // For incomplete groups, we might need a different list.
-            const membersToShow = isGroupFull ? finalTurnOrder : groupData.members;
+            const membersToShow = isGroupFull || currentStatus === 'Terminé' ? finalTurnOrder : groupData.members;
 
             const memberList: Member[] = membersToShow.map((memberId: string, index: number) => {
                 let roles: ('Admin' | 'Membre' | 'Bénéficiaire' | 'Moi')[] = [];
@@ -236,7 +244,7 @@ export default function GroupDetailPage() {
                 if (beneficiaryId === memberId) roles.push('Bénéficiaire');
                 if (roles.length === 0) roles.push('Membre');
                 
-                const beneficiaryDateObject = isGroupFull ? calcDate(startDate, index) : new Date();
+                const beneficiaryDateObject = isGroupFull || currentStatus === 'Terminé' ? calcDate(startDate, index) : new Date();
                 
                 return {
                     id: memberId,
@@ -245,7 +253,7 @@ export default function GroupDetailPage() {
                     role: roles.join(', ') as any,
                     status: group.paymentStatus?.[memberId] || 'En attente',
                     receptionStatus: group.receptionStatus?.[memberId] || 'En attente',
-                    beneficiaryDate: isGroupFull ? format(beneficiaryDateObject, 'PPP', { locale: fr }) : "Non déterminé",
+                    beneficiaryDate: isGroupFull || currentStatus === 'Terminé' ? format(beneficiaryDateObject, 'PPP', { locale: fr }) : "Non déterminé",
                     beneficiaryDateObject,
                 }
             });
@@ -369,6 +377,18 @@ export default function GroupDetailPage() {
   const isGroupFull = groupDetails && groupDetails.membersCount === groupDetails.totalRounds;
   const isUserAdmin = user && groupDetails && user.uid === groupDetails.adminId;
 
+  const getStatusBadgeVariant = (status: 'En attente' | 'En cours' | 'Terminé') => {
+      switch (status) {
+          case 'En cours':
+              return 'bg-green-500 text-white hover:bg-green-600';
+          case 'Terminé':
+              return 'bg-gray-500 text-white hover:bg-gray-600';
+          case 'En attente':
+          default:
+              return 'secondary';
+      }
+  }
+
 
   if (loading) {
       return (
@@ -405,18 +425,20 @@ export default function GroupDetailPage() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
         <div>
             <h1 className="text-3xl font-bold font-headline tracking-tight">{groupDetails.name}</h1>
-             <Badge variant={groupDetails.status === 'En cours' ? 'default' : 'secondary'} className={groupDetails.status === 'En cours' ? 'bg-green-500 text-white shrink-0 mt-2' : 'shrink-0 mt-2'}>
+             <Badge variant={'default'} className={cn('shrink-0 mt-2', getStatusBadgeVariant(groupDetails.status))}>
                 {groupDetails.status}
             </Badge>
         </div>
         <div className="flex gap-2 flex-wrap">
-             <Button variant="outline" onClick={copyInviteCode}>
-                <ClipboardCopy className="mr-2 h-4 w-4" /> Code: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
-            </Button>
+             {groupDetails.status !== 'Terminé' && (
+                <Button variant="outline" onClick={copyInviteCode}>
+                    <ClipboardCopy className="mr-2 h-4 w-4" /> Code: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
+                </Button>
+             )}
             
             <Dialog open={isGiveTurnDialogOpen} onOpenChange={setIsGiveTurnDialogOpen}>
                 <DialogTrigger asChild>
-                    <Button disabled={!isCurrentUserBeneficiary || isLastRound || eligibleMembersForSwap.length === 0 || hasUserReceivedFunds}>
+                    <Button disabled={!isCurrentUserBeneficiary || isLastRound || eligibleMembersForSwap.length === 0 || hasUserReceivedFunds || groupDetails.status === 'Terminé'}>
                         <SkipForward className="mr-2 h-4 w-4" />
                         Donner mon tour
                     </Button>
@@ -457,7 +479,7 @@ export default function GroupDetailPage() {
                 </DialogContent>
             </Dialog>
 
-             {isUserAdmin && !isGroupFull && (
+             {isUserAdmin && !isGroupFull && groupDetails.status === 'En attente' && (
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                         <Button variant="destructive" disabled={isDeleting}>
@@ -544,7 +566,7 @@ export default function GroupDetailPage() {
           <CardTitle>Ordre de passage et membres</CardTitle>
         </CardHeader>
         <CardContent>
-          {isGroupFull ? (
+          {groupDetails.status === 'En cours' || groupDetails.status === 'Terminé' ? (
             <div>
               {/* Table for larger screens */}
               <div className="hidden md:block">
@@ -569,7 +591,7 @@ export default function GroupDetailPage() {
                           <TableCell>
                             <div className="flex items-center gap-1 flex-wrap">
                               {member.role.includes('Admin') && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
-                              {member.role.includes('Bénéficiaire') && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
+                              {member.role.includes('Bénéficiaire') && groupDetails.status !== 'Terminé' && <Badge variant="default" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
                               {member.role.includes('Moi') && <Badge variant="outline">Moi</Badge>}
                               {member.role === 'Membre' && <Badge variant="secondary">Membre</Badge>}
                             </div>
@@ -582,7 +604,7 @@ export default function GroupDetailPage() {
                                         <CheckCircle className="mr-1 h-4 w-4" />
                                         Reçu
                                     </Badge>
-                               ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id ? (
+                               ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id && groupDetails.status !== 'Terminé' ? (
                                    <AlertDialog>
                                      <AlertDialogTrigger asChild>
                                         <Button size="sm">
@@ -629,7 +651,7 @@ export default function GroupDetailPage() {
                                           <p className="font-bold">{member.displayName}</p>
                                           <div className="flex items-center gap-1 flex-wrap mt-1">
                                             {member.role.includes('Admin') && <Badge variant="destructive" size="sm"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
-                                            {member.role.includes('Bénéficiaire') && <Badge variant="default" size="sm" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
+                                            {member.role.includes('Bénéficiaire') && groupDetails.status !== 'Terminé' && <Badge variant="default" size="sm" className="bg-primary text-primary-foreground">Bénéficiaire</Badge>}
                                             {member.role.includes('Moi') && <Badge variant="outline" size="sm">Moi</Badge>}
                                             {member.role === 'Membre' && <Badge variant="secondary" size="sm">Membre</Badge>}
                                           </div>
@@ -649,7 +671,7 @@ export default function GroupDetailPage() {
                                                     <CheckCircle className="mr-1 h-4 w-4" />
                                                     Reçu
                                                 </Badge>
-                                           ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id ? (
+                                           ) : (isPast(member.beneficiaryDateObject) || isToday(member.beneficiaryDateObject)) && user?.uid === member.id && groupDetails.status !== 'Terminé' ? (
                                                <AlertDialog>
                                                  <AlertDialogTrigger asChild>
                                                     <Button size="sm" variant="default">
@@ -701,5 +723,7 @@ export default function GroupDetailPage() {
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
+
+    
 
     
