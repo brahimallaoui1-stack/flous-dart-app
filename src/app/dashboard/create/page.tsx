@@ -93,20 +93,9 @@ export default function CreateGroupPage() {
     setIsLoading(true);
 
     try {
-      // Check for existing group with the same name for this user
-      const q = query(collection(db, 'groups'), where('admin', '==', user.uid), where('name', '==', data.groupName));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        toast({ variant: 'destructive', description: "Vous avez déjà un groupe avec ce nom." });
-        setIsLoading(false);
-        return;
-      }
-
       const groupId = createGroupId(data.groupName);
       const groupDocRef = doc(db, 'groups', groupId);
 
-      // Although highly unlikely, check if the generated ID already exists
       const docSnap = await getDoc(groupDocRef);
       if (docSnap.exists()) {
            toast({ variant: 'destructive', description: "Erreur lors de la génération de l'identifiant du groupe. Veuillez réessayer." });
