@@ -96,12 +96,13 @@ export default function CreateGroupPage() {
       const groupId = createGroupId(data.groupName);
       const groupDocRef = doc(db, 'groups', groupId);
 
-      const docSnap = await getDoc(groupDocRef);
-      if (docSnap.exists()) {
-           toast({ variant: 'destructive', description: "Erreur lors de la génération de l'identifiant du groupe. Veuillez réessayer." });
-           setIsLoading(false);
-           return;
-      }
+      // This check is removed to simplify security rules
+      // const docSnap = await getDoc(groupDocRef);
+      // if (docSnap.exists()) {
+      //      toast({ variant: 'destructive', description: "Erreur lors de la génération de l'identifiant du groupe. Veuillez réessayer." });
+      //      setIsLoading(false);
+      //      return;
+      // }
 
       const groupData = {
         name: data.groupName,
