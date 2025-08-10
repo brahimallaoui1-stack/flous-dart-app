@@ -2,24 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Les utilisateurs peuvent lire les données publiques des autres utilisateurs, mais ne peuvent écrire que dans leur propre document.
+    // Users can read other users' public data, but can only write to their own document.
     match /users/{userId} {
       allow read: if request.auth != null;
+      // Allow user to create their own document or update it.
       allow write: if request.auth.uid == userId;
     }
 
-    // Règles pour la collection 'groups'
+    // Rules for the 'groups' collection
     match /groups/{groupId} {
-      // Autoriser l'accès en lecture uniquement aux membres du groupe.
+      // Allow read access only to members of the group.
       allow read: if request.auth != null && request.auth.uid in resource.data.members;
 
-      // Autoriser la création de groupe pour tout utilisateur authentifié qui s'auto-désigne comme admin.
+      // Allow group creation for any authenticated user.
       allow create: if request.auth != null && request.auth.uid == request.resource.data.admin;
 
-      // Autoriser les mises à jour uniquement par les membres du groupe sous des conditions spécifiques.
+      // Allow updates only by members of the group under specific conditions.
       allow update: if request.auth != null && request.auth.uid in resource.data.members;
       
-      // Autoriser la suppression uniquement par l'administrateur du groupe et uniquement si le groupe est en attente.
+      // Allow deletion only by the group's administrator and only if the group is 'En attente'.
       allow delete: if request.auth != null && request.auth.uid == resource.data.admin && resource.data.status == 'En attente';
     }
   }

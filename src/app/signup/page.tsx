@@ -24,7 +24,8 @@ const createUserDocument = async (user: User, name?: string) => {
     displayName: name || user.displayName || 'Utilisateur',
     photoURL: user.photoURL
   };
-  await setDoc(userRef, userData, { merge: true });
+  // Use setDoc without merge on creation, this is a 'create' operation
+  await setDoc(userRef, userData);
 };
 
 export default function SignupPage() {
