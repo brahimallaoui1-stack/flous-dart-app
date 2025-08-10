@@ -1,11 +1,30 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access only for authenticated users.
-    // This is a simpler rule set to ensure functionality.
-    // We can tighten these rules later.
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    // Les utilisateurs peuvent lire les données publiques des autres, mais ne peuvent écrire que dans leur propre document.
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId;
+    }
+
+    // Règles pour la collection 'groups'
+    match /groups/{groupId} {
+      // Un utilisateur peut lire un document de groupe s'il est membre de ce groupe.
+      allow read: if request.auth.uid in resource.data.members;
+      
+      // Un utilisateur peut lister les groupes dont il est membre.
+      allow list: if request.auth.uid != null && request.query.where.size() > 0 && request.query.where[0] == ['members', 'array-contains', request.auth.uid];
+
+      // Autoriser la création de groupe pour tout utilisateur authentifié.
+      allow create: if request.auth != null;
+
+      // Autoriser les mises à jour uniquement par les membres du groupe.
+      allow update: if request.auth.uid in resource.data.members;
+      
+      // Autoriser la suppression uniquement par l'administrateur du groupe.
+      allow delete: if request.auth.uid == resource.data.admin;
     }
   }
 }
+    
