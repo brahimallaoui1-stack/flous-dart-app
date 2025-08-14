@@ -1,18 +1,12 @@
 {
-  "name": "Flous Dart",
-  "short_name": "FlousDart",
+  "name": "Flous Dart Manager",
+  "short_name": "Flous Dart",
   "description": "Gérez vos cycles d'épargne collective numériquement et en toute sécurité.",
   "start_url": "/login",
   "display": "standalone",
-  "background_color": "#f0fdf4",
-  "theme_color": "#22c55e",
-  "id": "com.flousdart.app",
+  "background_color": "#eafaf4",
+  "theme_color": "#38a169",
   "icons": [
-    {
-      "src": "/logo.png",
-      "sizes": "64x64",
-      "type": "image/png"
-    },
     {
       "src": "/logo.png",
       "sizes": "192x192",
@@ -23,5 +17,9 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "id": "com.flousdart.app",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
 }
