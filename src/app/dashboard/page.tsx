@@ -214,7 +214,7 @@ export default function DashboardPage() {
               return;
           }
 
-          if (groupData.members.length >= groupData.maxMembers) {
+          if (groupData.members.length >= groupData.totalRounds) {
               toast({ variant: 'destructive', description: "Ce groupe est déjà complet." });
               setIsJoining(false);
               return;
