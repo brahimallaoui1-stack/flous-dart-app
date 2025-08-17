@@ -22,9 +22,9 @@ const createUserDocument = async (user: User, name?: string) => {
     uid: user.uid,
     email: user.email,
     displayName: name || user.displayName || 'Utilisateur',
-    photoURL: user.photoURL
+    photoURL: user.photoURL,
+    createdAt: new Date(),
   };
-  // Use setDoc without merge on creation, this is a 'create' operation
   await setDoc(userRef, userData);
 };
 
@@ -41,12 +41,16 @@ export default function SignupPage() {
         setIsLoading(true);
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            if(userCredential.user) {
-                await updateProfile(userCredential.user, {
-                    displayName: name
-                });
-                await createUserDocument(userCredential.user, name);
-            }
+            const user = userCredential.user;
+            
+            // First, update the profile in Firebase Auth
+            await updateProfile(user, {
+                displayName: name
+            });
+
+            // Then, create the user document in Firestore
+            await createUserDocument(user, name);
+
             router.push('/dashboard');
         } catch (error: any) {
             console.error('Signup error:', error);
