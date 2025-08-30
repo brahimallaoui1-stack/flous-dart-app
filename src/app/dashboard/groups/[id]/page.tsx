@@ -424,7 +424,7 @@ export default function GroupDetailPage() {
             </Badge>
         </div>
         <div className="flex gap-2 flex-wrap">
-             {groupDetails.status !== 'Terminé' && (
+             {!isGroupFull && groupDetails.status !== 'Terminé' && (
                 <Button variant="outline" onClick={copyInviteCode}>
                     <ClipboardCopy className="mr-2 h-4 w-4" /> Code: <span className="ml-2 font-bold">{groupDetails.inviteCode}</span>
                 </Button>
