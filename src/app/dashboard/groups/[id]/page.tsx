@@ -557,7 +557,7 @@ export default function GroupDetailPage() {
 
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle>Ordre de passage et membres</CardTitle>
+          <CardTitle>Ordre des membres</CardTitle>
         </CardHeader>
         <CardContent>
           {groupDetails.status === 'En cours' || groupDetails.status === 'Terminé' ? (
