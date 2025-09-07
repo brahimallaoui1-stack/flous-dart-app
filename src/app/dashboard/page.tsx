@@ -347,21 +347,16 @@ export default function DashboardPage() {
                                         <span className="font-bold text-primary truncate">{group.status === 'Terminé' ? 'Aucun' : group.currentBeneficiary?.displayName ?? 'À déterminer'}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center p-2 rounded-md bg-muted/50">
-                                    <ChevronsRight className="mr-3 h-5 w-5 text-muted-foreground shrink-0"/>
-                                    <div className="flex flex-col">
-                                        <span className="text-muted-foreground text-xs">Progression de cycle</span>
-                                        <span className="font-semibold truncate">
-                                            {`Tour ${group.currentRound} / ${group.totalRounds}`}
-                                        </span>
-                                    </div>
-                                </div>
                             </div>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-3 text-sm">
                             <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><Users className="mr-2 h-4 w-4"/>Membres</span>
                                 <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                                <span className="flex items-center text-muted-foreground"><ChevronsRight className="mr-2 h-4 w-4"/>Progression</span>
+                                <span className="font-bold">{`Tour ${group.currentRound} / ${group.totalRounds}`}</span>
                             </div>
                              <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><Repeat className="mr-2 h-4 w-4"/>Fréquence</span>
