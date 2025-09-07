@@ -339,9 +339,21 @@ export default function DashboardPage() {
                                     {group.status}
                                 </Badge>
                             </div>
-                            <div className="text-sm text-muted-foreground space-y-1 pt-2">
-                                <p className="flex items-center"><Crown className="mr-2 h-4 w-4 text-yellow-500"/>Bénéficiaire actuel: <span className="font-semibold ml-1 text-primary">{group.status === 'Terminé' ? 'Aucun' : group.currentBeneficiary?.displayName ?? 'À déterminer'}</span></p>
-                                <p className="flex items-center"><ChevronsRight className="mr-2 h-4 w-4"/>Prochain bénéficiaire: <span className="font-semibold ml-1">{group.nextBeneficiary?.displayName ?? (group.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span></p>
+                            <div className="space-y-2 pt-2 text-sm">
+                                <div className="flex items-center p-2 rounded-md bg-yellow-100/50 dark:bg-yellow-900/30 border border-yellow-200/80 dark:border-yellow-800/50">
+                                    <Crown className="mr-3 h-5 w-5 text-yellow-500 shrink-0"/>
+                                    <div className="flex flex-col">
+                                        <span className="text-muted-foreground text-xs">Bénéficiaire actuel</span>
+                                        <span className="font-bold text-primary truncate">{group.status === 'Terminé' ? 'Aucun' : group.currentBeneficiary?.displayName ?? 'À déterminer'}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center p-2 rounded-md bg-muted/50">
+                                    <ChevronsRight className="mr-3 h-5 w-5 text-muted-foreground shrink-0"/>
+                                    <div className="flex flex-col">
+                                        <span className="text-muted-foreground text-xs">Prochain bénéficiaire</span>
+                                        <span className="font-semibold truncate">{group.nextBeneficiary?.displayName ?? (group.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span>
+                                    </div>
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-3 text-sm">
@@ -383,5 +395,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
