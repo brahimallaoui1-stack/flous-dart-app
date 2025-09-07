@@ -568,7 +568,7 @@ export default function GroupDetailPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>#</TableHead>
+                        <TableHead>Tour</TableHead>
                         <TableHead>Membre</TableHead>
                         <TableHead>Rôle</TableHead>
                         <TableHead>Date de réception</TableHead>
@@ -740,3 +740,6 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
 
     
 
+
+
+    
