@@ -507,7 +507,7 @@ export default function GroupDetailPage() {
                 <CardTitle>Bénéficiaire actuel</CardTitle>
             </CardHeader>
             <CardContent className="flex items-center gap-4">
-                 <Avatar className="h-12 w-12"><AvatarFallback><User className="h-6 w-6" /></AvatarFallback></Avatar>
+                 <Avatar className="h-12 w-12"><AvatarFallback><Crown className="h-6 w-6" /></AvatarFallback></Avatar>
                  <div>
                     <p className="font-bold text-lg">{groupDetails.beneficiary?.name || 'À déterminer'}</p>
                  </div>
