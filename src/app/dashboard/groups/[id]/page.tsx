@@ -78,6 +78,7 @@ interface GroupDetails {
 
 interface Member {
     id: string;
+    serialNumber: number;
     displayName: string | null;
     email: string | null;
     role: 'Admin' | 'Membre' | 'Bénéficiaire' | 'Moi';
@@ -242,6 +243,7 @@ export default function GroupDetailPage() {
                 
                 return {
                     id: memberId,
+                    serialNumber: index + 1,
                     displayName: userDetailsMap.get(memberId)?.displayName || 'Utilisateur inconnu',
                     email: userDetailsMap.get(memberId)?.email || 'email inconnu',
                     role: roles.join(', ') as any,
@@ -566,6 +568,7 @@ export default function GroupDetailPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>#</TableHead>
                         <TableHead>Membre</TableHead>
                         <TableHead>Rôle</TableHead>
                         <TableHead>Date de réception</TableHead>
@@ -576,11 +579,13 @@ export default function GroupDetailPage() {
                       {members.map((member) => (
                         <TableRow key={member.id} className={member.id === groupDetails.beneficiary?.id ? 'bg-secondary' : ''}>
                           <TableCell className="font-medium">
-                            <div className="flex items-center gap-3">
-                                <Avatar><AvatarFallback><User className="h-5 w-5" /></AvatarFallback></Avatar>
-                                <span>{member.displayName}</span>
-                            </div>
+                             <Avatar className="h-8 w-8">
+                                <AvatarFallback className="bg-muted text-muted-foreground">
+                                    {member.serialNumber}
+                                </AvatarFallback>
+                            </Avatar>
                           </TableCell>
+                          <TableCell>{member.displayName}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1 flex-wrap">
                               {member.role.includes('Admin') && <Badge variant="destructive"><Crown className="mr-1 h-3 w-3" />Admin</Badge>}
@@ -639,7 +644,11 @@ export default function GroupDetailPage() {
                           <CardContent className="p-4 space-y-3">
                               <div className="flex justify-between items-start">
                                   <div className="flex items-center gap-3">
-                                      <Avatar><AvatarFallback><User className="h-5 w-5" /></AvatarFallback></Avatar>
+                                       <Avatar className="h-10 w-10">
+                                            <AvatarFallback className="bg-muted text-muted-foreground font-bold">
+                                                {member.serialNumber}
+                                            </AvatarFallback>
+                                        </Avatar>
                                       <div>
                                           <p className="font-bold">{member.displayName}</p>
                                           <div className="flex items-center gap-1 flex-wrap mt-1">
@@ -722,6 +731,8 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
     
 
 
+
+    
 
     
 
