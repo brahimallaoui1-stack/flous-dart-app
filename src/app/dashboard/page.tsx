@@ -257,9 +257,9 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div className="md:col-span-1">
-          <Button asChild className="w-full h-full">
+          <Button asChild className="w-full h-18 text-lg">
             <Link href="/dashboard/create">
-              <PlusCircle className="mr-2 h-4 w-4" />
+              <PlusCircle className="mr-2 h-5 w-5" />
               Créer un nouveau groupe
             </Link>
           </Button>
@@ -267,8 +267,8 @@ export default function DashboardPage() {
         <div className="md:col-span-1">
             <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full h-full">
-                        <LogIn className="mr-2 h-4 w-4" />
+                    <Button variant="outline" className="w-full h-18 text-lg">
+                        <LogIn className="mr-2 h-5 w-5" />
                         Rejoindre un groupe
                     </Button>
                 </DialogTrigger>
@@ -383,3 +383,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
