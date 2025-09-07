@@ -510,7 +510,6 @@ export default function GroupDetailPage() {
                  <Avatar className="h-12 w-12"><AvatarFallback><User className="h-6 w-6" /></AvatarFallback></Avatar>
                  <div>
                     <p className="font-bold text-lg">{groupDetails.beneficiary?.name || 'À déterminer'}</p>
-                    <p className="text-sm text-muted-foreground">Tour actuel : {groupDetails.currentRound} / {groupDetails.totalRounds}</p>
                  </div>
             </CardContent>
         </Card>
@@ -723,6 +722,8 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
     
 
 
+
+    
 
     
 
