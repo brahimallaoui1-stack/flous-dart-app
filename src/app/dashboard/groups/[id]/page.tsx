@@ -430,48 +430,50 @@ export default function GroupDetailPage() {
                 </Button>
              )}
             
-            <Dialog open={isGiveTurnDialogOpen} onOpenChange={setIsGiveTurnDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button disabled={!isCurrentUserBeneficiary || isLastRound || eligibleMembersForSwap.length === 0 || hasUserReceivedFunds || groupDetails.status === 'Terminé'}>
-                        <SkipForward className="mr-2 h-4 w-4" />
-                        Donner mon tour
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                    <DialogTitle>À qui souhaitez-vous donner votre tour ?</DialogTitle>
-                    <DialogDescription>
-                        Sélectionnez le membre qui bénéficiera de la tontine à votre place pour ce tour. Cette action est irréversible.
-                    </DialogDescription>
-                    </DialogHeader>
-                    <RadioGroup 
-                        onValueChange={setSelectedMemberToSwap}
-                        className="my-4 max-h-64 overflow-y-auto"
-                    >
-                        {eligibleMembersForSwap.map(member => (
-                            <div key={member.id} className="flex items-center space-x-2 rounded-md border p-3">
-                                <RadioGroupItem value={member.id} id={member.id} />
-                                <Label htmlFor={member.id} className="flex-1 cursor-pointer">
-                                   <div className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8"><AvatarFallback><User className="h-4 w-4" /></AvatarFallback></Avatar>
-                                        <div className="flex flex-col">
-                                            <span className="font-semibold">{member.displayName}</span>
-                                            <span className="text-xs text-muted-foreground">Date de réception prévue: {member.beneficiaryDate}</span>
-                                        </div>
-                                    </div>
-                                </Label>
-                            </div>
-                        ))}
-                    </RadioGroup>
-                    <DialogFooter>
-                    <Button variant="ghost" onClick={() => setIsGiveTurnDialogOpen(false)}>Annuler</Button>
-                    <Button onClick={handleConfirmGiveTurn} disabled={isGivingTurn || !selectedMemberToSwap}>
-                        {isGivingTurn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        {isGivingTurn ? 'Confirmation...' : 'Confirmer et donner mon tour'}
-                    </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {isCurrentUserBeneficiary && !isLastRound && eligibleMembersForSwap.length > 0 && !hasUserReceivedFunds && groupDetails.status !== 'Terminé' && (
+              <Dialog open={isGiveTurnDialogOpen} onOpenChange={setIsGiveTurnDialogOpen}>
+                  <DialogTrigger asChild>
+                      <Button>
+                          <SkipForward className="mr-2 h-4 w-4" />
+                          Donner mon tour
+                      </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                      <DialogHeader>
+                      <DialogTitle>À qui souhaitez-vous donner votre tour ?</DialogTitle>
+                      <DialogDescription>
+                          Sélectionnez le membre qui bénéficiera de la tontine à votre place pour ce tour. Cette action est irréversible.
+                      </DialogDescription>
+                      </DialogHeader>
+                      <RadioGroup 
+                          onValueChange={setSelectedMemberToSwap}
+                          className="my-4 max-h-64 overflow-y-auto"
+                      >
+                          {eligibleMembersForSwap.map(member => (
+                              <div key={member.id} className="flex items-center space-x-2 rounded-md border p-3">
+                                  <RadioGroupItem value={member.id} id={member.id} />
+                                  <Label htmlFor={member.id} className="flex-1 cursor-pointer">
+                                    <div className="flex items-center gap-3">
+                                          <Avatar className="h-8 w-8"><AvatarFallback><User className="h-4 w-4" /></AvatarFallback></Avatar>
+                                          <div className="flex flex-col">
+                                              <span className="font-semibold">{member.displayName}</span>
+                                              <span className="text-xs text-muted-foreground">Date de réception prévue: {member.beneficiaryDate}</span>
+                                          </div>
+                                      </div>
+                                  </Label>
+                              </div>
+                          ))}
+                      </RadioGroup>
+                      <DialogFooter>
+                      <Button variant="ghost" onClick={() => setIsGiveTurnDialogOpen(false)}>Annuler</Button>
+                      <Button onClick={handleConfirmGiveTurn} disabled={isGivingTurn || !selectedMemberToSwap}>
+                          {isGivingTurn ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                          {isGivingTurn ? 'Confirmation...' : 'Confirmer et donner mon tour'}
+                      </Button>
+                      </DialogFooter>
+                  </DialogContent>
+              </Dialog>
+            )}
 
              {isUserAdmin && !isGroupFull && groupDetails.status === 'En attente' && (
                 <AlertDialog>
@@ -721,3 +723,4 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
     
 
     
+
