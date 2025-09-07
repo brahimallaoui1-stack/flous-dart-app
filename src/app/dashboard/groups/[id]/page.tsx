@@ -419,9 +419,9 @@ export default function GroupDetailPage() {
         </Button>
 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-        <div>
+        <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold font-headline tracking-tight">{groupDetails.name}</h1>
-             <Badge variant={'default'} className={cn('shrink-0 mt-2', getStatusBadgeVariant(groupDetails.status))}>
+             <Badge variant={'default'} className={cn('shrink-0', getStatusBadgeVariant(groupDetails.status))}>
                 {groupDetails.status}
             </Badge>
         </div>
