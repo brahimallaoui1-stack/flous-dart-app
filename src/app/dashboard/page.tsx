@@ -350,17 +350,17 @@ export default function DashboardPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-3 text-sm">
-                            <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                                <span className="flex items-center text-muted-foreground"><Users className="mr-2 h-4 w-4"/>Membres</span>
-                                <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
-                            </div>
-                            <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                             <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><ChevronsRight className="mr-2 h-4 w-4"/>Progression</span>
                                 <span className="font-bold">{`Tour ${group.currentRound} / ${group.totalRounds}`}</span>
                             </div>
                              <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><Repeat className="mr-2 h-4 w-4"/>Fréquence</span>
                                 <span className="font-bold capitalize">{getFrequencyLabel(group.frequency)}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                                <span className="flex items-center text-muted-foreground"><Users className="mr-2 h-4 w-4"/>Membres</span>
+                                <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
                             </div>
                             <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
                                 <span className="flex items-center text-muted-foreground"><CircleDollarSign className="mr-2 h-4 w-4"/>Cotisation</span>
