@@ -339,7 +339,7 @@ export default function DashboardPage() {
                                     {group.status}
                                 </Badge>
                             </div>
-                            <div className="space-y-2 pt-2 text-sm">
+                             <div className="space-y-2 pt-2 text-sm">
                                 <div className="flex items-center p-2 rounded-md bg-yellow-100/50 dark:bg-yellow-900/30 border border-yellow-200/80 dark:border-yellow-800/50">
                                     <Crown className="mr-3 h-5 w-5 text-yellow-500 shrink-0"/>
                                     <div className="flex flex-col">
@@ -350,8 +350,10 @@ export default function DashboardPage() {
                                 <div className="flex items-center p-2 rounded-md bg-muted/50">
                                     <ChevronsRight className="mr-3 h-5 w-5 text-muted-foreground shrink-0"/>
                                     <div className="flex flex-col">
-                                        <span className="text-muted-foreground text-xs">Prochain bénéficiaire</span>
-                                        <span className="font-semibold truncate">{group.nextBeneficiary?.displayName ?? (group.status === 'En cours' ? 'Cycle terminé' : 'À déterminer')}</span>
+                                        <span className="text-muted-foreground text-xs">Progression de cycle</span>
+                                        <span className="font-semibold truncate">
+                                            {`Tour ${group.currentRound} / ${group.totalRounds}`}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
