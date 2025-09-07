@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { PlusCircle, Users, Loader2, User, Calendar, CircleDollarSign, Hash, ChevronsRight, Crown, Repeat } from 'lucide-react';
+import { PlusCircle, Users, Loader2, User, Calendar, CircleDollarSign, Hash, ChevronsRight, Crown, Repeat, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,15 @@ import { addDays, addMonths, addWeeks, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "@/components/ui/dialog";
+import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -26,8 +35,8 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
-  } from "@/components/ui/alert-dialog";
+  } from "@/components/ui/alert-dialog"
+import { Label } from '@/components/ui/label';
 
 type UserDetails = {
     displayName: string | null;
@@ -88,6 +97,7 @@ export default function DashboardPage() {
   const [loadingGroups, setLoadingGroups] = useState(true);
   const [inviteCode, setInviteCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -225,6 +235,7 @@ export default function DashboardPage() {
           });
 
           toast({ description: `Vous avez rejoint le groupe "${groupData.name}" !` });
+          setIsJoinDialogOpen(false); // Close the dialog on success
           router.push(`/dashboard/groups/${groupDoc.id}`);
 
       } catch (err) {
@@ -243,9 +254,9 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold font-headline tracking-tight">Espace {user?.displayName || 'Membre'}</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div className="md:col-span-1">
-          <Button asChild className="w-full">
+          <Button asChild className="w-full h-full">
             <Link href="/dashboard/create">
               <PlusCircle className="mr-2 h-4 w-4" />
               Créer un nouveau groupe
@@ -253,39 +264,54 @@ export default function DashboardPage() {
           </Button>
         </div>
         <div className="md:col-span-1">
-            <Card className="shadow-md">
-                <CardContent className="p-4">
-                  <div className="flex gap-2">
-                    <Input 
-                        placeholder="Code d'invitation..." 
-                        value={inviteCode}
-                        onChange={(e) => setInviteCode(e.target.value)}
-                        disabled={isJoining}
-                        className="flex-grow"
-                    />
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                             <Button disabled={isJoining || !inviteCode.trim()} className="shrink-0">
-                                {isJoining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                {isJoining ? '...' : "Rejoindre"}
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                            <AlertDialogTitle>Avertissement Important</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Pour garantir une transparence et une équité totales, l'ordre de passage des participants sera déterminé de manière automatique et aléatoire une fois que le nombre maximum de membres autorisés aura été atteint.
-                            </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                            <AlertDialogCancel>Rejeter</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleJoinGroup}>Approuver</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </CardContent>
-            </Card>
+            <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full h-full">
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Rejoindre un groupe
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                    <DialogTitle>Rejoindre un groupe</DialogTitle>
+                    <DialogDescription>
+                        Saisissez le code d'invitation que vous avez reçu pour rejoindre un cycle d'épargne.
+                    </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <Label htmlFor="invite-code" className="sr-only">
+                            Code d'invitation
+                        </Label>
+                        <Input
+                            id="invite-code"
+                            placeholder="Entrez votre code d'invitation ici..."
+                            value={inviteCode}
+                            onChange={(e) => setInviteCode(e.target.value)}
+                            disabled={isJoining}
+                        />
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                 <Button disabled={isJoining || !inviteCode.trim()} className="w-full">
+                                    {isJoining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    {isJoining ? 'Vérification...' : "Rejoindre le groupe"}
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Avertissement Important</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Pour garantir une transparence et une équité totales, l'ordre de passage des participants sera déterminé de manière automatique et aléatoire une fois que le nombre maximum de membres autorisés aura été atteint.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Rejeter</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleJoinGroup}>Approuver</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
       </div>
 
@@ -356,5 +382,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
