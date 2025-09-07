@@ -501,7 +501,7 @@ export default function GroupDetailPage() {
         </div>
       </div>
 
-       <div className="grid gap-6 lg:grid-cols-2 mb-6">
+       <div className="grid gap-6 mb-6">
         <Card className="shadow-md">
             <CardHeader>
                 <CardTitle>Bénéficiaire actuel</CardTitle>
@@ -511,18 +511,6 @@ export default function GroupDetailPage() {
                  <div>
                     <p className="font-bold text-lg">{groupDetails.beneficiary?.name || 'À déterminer'}</p>
                     <p className="text-sm text-muted-foreground">Tour actuel : {groupDetails.currentRound} / {groupDetails.totalRounds}</p>
-                 </div>
-            </CardContent>
-        </Card>
-         <Card className="shadow-md">
-            <CardHeader>
-                <CardTitle>Prochain bénéficiaire</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-4">
-                 <Avatar className="h-12 w-12"><AvatarFallback><User className="h-6 w-6" /></AvatarFallback></Avatar>
-                 <div>
-                    <p className="font-bold text-lg">{groupDetails.nextBeneficiary?.name || 'À déterminer'}</p>
-                    <p className="text-sm text-muted-foreground">Prochain tour</p>
                  </div>
             </CardContent>
         </Card>
@@ -735,5 +723,7 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
     
 
 
+
+    
 
     
