@@ -509,7 +509,7 @@ export default function GroupDetailPage() {
                 <CardTitle>Bénéficiaire actuel</CardTitle>
             </CardHeader>
             <CardContent className="flex items-center gap-4">
-                 <Avatar className="h-12 w-12"><AvatarFallback><Crown className="h-6 w-6" /></AvatarFallback></Avatar>
+                 <Avatar className="h-12 w-12"><AvatarFallback className="bg-primary/10 text-primary"><Crown className="h-6 w-6" /></AvatarFallback></Avatar>
                  <div>
                     <p className="font-bold text-lg">{groupDetails.beneficiary?.name || 'À déterminer'}</p>
                  </div>
@@ -580,7 +580,7 @@ export default function GroupDetailPage() {
                         <TableRow key={member.id} className={member.id === groupDetails.beneficiary?.id ? 'bg-secondary' : ''}>
                           <TableCell className="font-medium">
                              <Avatar className="h-8 w-8">
-                                <AvatarFallback className="bg-muted text-muted-foreground">
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold">
                                     {member.serialNumber}
                                 </AvatarFallback>
                             </Avatar>
@@ -645,7 +645,7 @@ export default function GroupDetailPage() {
                               <div className="flex justify-between items-start">
                                   <div className="flex items-center gap-3">
                                        <Avatar className="h-10 w-10">
-                                            <AvatarFallback className="bg-muted text-muted-foreground font-bold">
+                                            <AvatarFallback className="bg-primary/10 text-primary font-bold">
                                                 {member.serialNumber}
                                             </AvatarFallback>
                                         </Avatar>
@@ -739,3 +739,4 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
     
 
     
+
