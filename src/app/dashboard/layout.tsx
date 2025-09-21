@@ -19,7 +19,8 @@ import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signOut } from 'firebase/auth';
 import React, { useEffect } from 'react';
-import { requestNotificationPermission, saveMessagingDeviceToken } from '@/lib/firebase-messaging';
+import { requestNotificationPermission, saveMessagingDeviceToken, onForegroundMessage } from '@/lib/firebase-messaging';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardLayout({
   children,
@@ -28,6 +29,7 @@ export default function DashboardLayout({
 }) {
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -41,8 +43,17 @@ export default function DashboardLayout({
                 saveMessagingDeviceToken(user.uid);
             }
         });
+
+        const unsubscribe = onForegroundMessage((payload) => {
+            toast({
+              title: payload.notification?.title,
+              description: payload.notification?.body,
+            });
+        });
+
+        return () => unsubscribe();
     }
-  }, [user]);
+  }, [user, toast]);
 
   React.useEffect(() => {
     if (!loading && !user) {

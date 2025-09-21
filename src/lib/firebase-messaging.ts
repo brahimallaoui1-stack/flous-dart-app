@@ -1,7 +1,7 @@
 
 'use client';
 
-import { getMessaging, getToken, isSupported } from 'firebase/messaging';
+import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
 import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { db, app } from './firebase';
 
@@ -52,3 +52,11 @@ export async function saveMessagingDeviceToken(userId: string) {
         console.error('Error getting or saving FCM token:', error);
     }
 }
+
+export const onForegroundMessage = (callback: (payload: any) => void) => {
+  const messagingInstance = getMessaging(app);
+  return onMessage(messagingInstance, (payload) => {
+    console.log('Foreground message received:', payload);
+    callback(payload);
+  });
+};
