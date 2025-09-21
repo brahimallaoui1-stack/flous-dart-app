@@ -99,7 +99,7 @@ export default function DashboardLayout({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                  <DropdownMenuItem asChild>
-                  <Link href="#">
+                  <Link href="/dashboard/alerts">
                     <Bell className="mr-2 h-4 w-4" />
                     <span>Alertes</span>
                   </Link>
