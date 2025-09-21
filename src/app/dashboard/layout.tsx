@@ -15,10 +15,11 @@ import {
 import { Logo } from '@/components/icons/logo';
 import { LogOut, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signOut } from 'firebase/auth';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { requestNotificationPermission, saveMessagingDeviceToken } from '@/lib/firebase-messaging';
 
 export default function DashboardLayout({
   children,
@@ -32,6 +33,16 @@ export default function DashboardLayout({
     await signOut(auth);
     router.push('/login');
   };
+  
+  useEffect(() => {
+    if (user) {
+        requestNotificationPermission().then(permission => {
+            if (permission === 'granted') {
+                saveMessagingDeviceToken(user.uid);
+            }
+        });
+    }
+  }, [user]);
 
   React.useEffect(() => {
     if (!loading && !user) {
