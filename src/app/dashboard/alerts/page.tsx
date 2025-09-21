@@ -47,16 +47,14 @@ export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Removed orderBy('createdAt', 'desc') to avoid indexing issues. Sorting will be done on the client.
   const [alertsCollection, loadingCollection, error] = useCollection(
-    user ? query(collection(db, 'users', user.uid, 'alerts')) : null
+    user ? query(collection(db, 'users', user.uid, 'alerts'), orderBy('isRead', 'asc'), orderBy('createdAt', 'desc')) : null
   );
 
   useEffect(() => {
     if (alertsCollection) {
       const fetchedAlerts = alertsCollection.docs.map(doc => {
         const data = doc.data();
-        // Handle both Timestamp and Date objects
         const createdAt = data.createdAt instanceof Timestamp 
             ? data.createdAt.toDate() 
             : new Date(data.createdAt);
@@ -67,8 +65,6 @@ export default function AlertsPage() {
           createdAt,
         } as Alert;
       });
-      // Sort alerts on the client-side
-      fetchedAlerts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setAlerts(fetchedAlerts);
     }
     setLoading(loadingCollection);
