@@ -27,9 +27,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Firebase Admin SDK not initialized.' }, { status: 500 });
   }
 
-  const { groupId, senderName, groupName } = await request.json();
+  const { groupId, senderName, groupName, notificationType, newMemberName } = await request.json();
 
-  if (!groupId || !senderName || !groupName) {
+  if (!groupId || !groupName || !notificationType) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
   }
 
@@ -64,13 +64,31 @@ export async function POST(request: Request) {
     if (uniqueTokens.length === 0) {
       return NextResponse.json({ success: true, message: 'No registered device tokens found for members.' });
     }
+
+    // 3. Construct notification based on type
+    let notificationPayload;
+    switch (notificationType) {
+        case 'paymentConfirmation':
+             if (!senderName) return NextResponse.json({ success: false, error: 'Missing senderName for this notification type' }, { status: 400 });
+             notificationPayload = {
+                title: `Confirmation de paiement - ${groupName}`,
+                body: `${senderName} a confirmé avoir reçu les fonds pour ce tour !`
+            };
+            break;
+        case 'newMemberJoined':
+            if (!newMemberName) return NextResponse.json({ success: false, error: 'Missing newMemberName for this notification type' }, { status: 400 });
+            notificationPayload = {
+                title: `Nouveau membre dans ${groupName}`,
+                body: `Bienvenue à ${newMemberName} qui vient de rejoindre le groupe !`
+            };
+            break;
+        default:
+            return NextResponse.json({ success: false, error: 'Invalid notification type' }, { status: 400 });
+    }
     
-    // 3. Send notifications
+    // 4. Send notifications
     const message = {
-      notification: {
-        title: `Confirmation de paiement - ${groupName}`,
-        body: `${senderName} a confirmé avoir reçu les fonds pour ce tour !`
-      },
+      notification: notificationPayload,
       tokens: uniqueTokens,
     };
 

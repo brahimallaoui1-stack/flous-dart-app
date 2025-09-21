@@ -234,6 +234,21 @@ export default function DashboardPage() {
           await updateDoc(doc(db, 'groups', groupDoc.id), {
               members: arrayUnion(user.uid)
           });
+          
+          // Send notification to group members
+          fetch('/api/send-notification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                notificationType: 'newMemberJoined',
+                groupId: groupDoc.id,
+                groupName: groupData.name,
+                newMemberName: user.displayName || 'Un nouveau membre'
+            }),
+          });
+
 
           toast({ description: `Vous avez rejoint le groupe "${groupData.name}" !` });
           setIsJoinDialogOpen(false); // Close the dialog on success

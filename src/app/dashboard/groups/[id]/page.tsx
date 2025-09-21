@@ -322,6 +322,7 @@ export default function GroupDetailPage() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                notificationType: 'paymentConfirmation',
                 groupId: groupId,
                 senderName: user.displayName || 'Un membre',
                 groupName: groupDetails.name
@@ -756,3 +757,4 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
 
 
     
+
