@@ -306,7 +306,7 @@ export default function GroupDetailPage() {
   };
 
   const handleConfirmReception = async (memberId: string) => {
-    if (!user || user.uid !== memberId) return;
+    if (!user || user.uid !== memberId || !groupDetails) return;
 
     try {
         const groupDocRef = doc(db, 'groups', groupId);
@@ -315,7 +315,20 @@ export default function GroupDetailPage() {
             [`receptionStatus.${memberId}`]: 'Reçu'
         });
 
-        toast({ description: "Vous avez confirmé la réception des fonds !" });
+        // Send notification
+        fetch('/api/send-notification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                groupId: groupId,
+                senderName: user.displayName || 'Un membre',
+                groupName: groupDetails.name
+            }),
+        });
+
+        toast({ description: "Vous avez confirmé la réception des fonds ! Les membres seront notifiés." });
         await fetchGroupData(); // Refresh data to show updated status
     } catch (error) {
         console.error("Error confirming reception:", error);
@@ -504,7 +517,7 @@ export default function GroupDetailPage() {
       </div>
 
        <div className="grid gap-6 mb-6">
-        <Card className="shadow-md">
+        <Card className="shadow-md w-full">
             <CardHeader>
                 <CardTitle>Bénéficiaire actuel</CardTitle>
             </CardHeader>
