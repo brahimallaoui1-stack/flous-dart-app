@@ -281,15 +281,43 @@ export default function GroupDetailPage() {
 
         if (currentUserIndex !== groupDetails.currentRound || targetUserIndex <= currentUserIndex) {
             toast({ variant: 'destructive', description: "Action non autorisée." });
+            setIsGivingTurn(false);
             return;
         }
 
         const newTurnOrder = [...turnOrder];
-        // Swap
         [newTurnOrder[currentUserIndex], newTurnOrder[targetUserIndex]] = [newTurnOrder[targetUserIndex], newTurnOrder[currentUserIndex]];
         
         await updateDoc(doc(db, 'groups', groupId), {
             turnOrder: newTurnOrder
+        });
+
+        const targetMemberDetails = members.find(m => m.id === selectedMemberToSwap);
+
+        // Notify all members about the turn swap
+        fetch('/api/send-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                notificationType: 'turnGiven',
+                groupId: groupId,
+                groupName: groupDetails.name,
+                senderName: user.displayName || 'Un membre',
+                receiverName: targetMemberDetails?.displayName || 'un autre membre',
+            }),
+        });
+
+        // Notify the member who received the turn
+        fetch('/api/send-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                notificationType: 'turnReceived',
+                groupId: groupId,
+                groupName: groupDetails.name,
+                senderName: user.displayName || 'Un membre',
+                recipientId: selectedMemberToSwap,
+            }),
         });
 
         setTurnOrder(newTurnOrder);
@@ -776,3 +804,6 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
 
 
 
+
+
+    
