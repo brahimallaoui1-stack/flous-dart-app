@@ -32,10 +32,7 @@ export default function DashboardLayout({
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
 
-  const alertsRef = user ? collection(db, 'users', user.uid, 'alerts') : null;
-  const unreadQuery = alertsRef ? query(alertsRef, where('isRead', '==', false)) : null;
-  const [unreadAlerts] = useCollection(unreadQuery);
-  const unreadCount = unreadAlerts?.docs.length || 0;
+
 
 
   const handleLogout = async () => {
@@ -76,17 +73,7 @@ export default function DashboardLayout({
             <span className="text-xl font-bold text-foreground font-headline">Flous Dart</span>
           </Link>
           <div className="flex items-center gap-4">
-             <Button variant="ghost" size="icon" asChild className="relative">
-                <Link href="/dashboard/alerts">
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
-                      {unreadCount}
-                    </span>
-                  )}
-                  <span className="sr-only">Voir les alertes</span>
-                </Link>
-            </Button>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -104,19 +91,6 @@ export default function DashboardLayout({
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/alerts" className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Bell className="mr-2 h-4 w-4" />
-                      <span>Alertes</span>
-                    </div>
-                    {unreadCount > 0 && (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/profile">
                     <User className="mr-2 h-4 w-4" />
