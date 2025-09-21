@@ -80,7 +80,7 @@ export default function DashboardLayout({
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName || 'Utilisateur'}</p>
+                    <p className="text-sm font-bold leading-none">{user.displayName || 'Utilisateur'}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
