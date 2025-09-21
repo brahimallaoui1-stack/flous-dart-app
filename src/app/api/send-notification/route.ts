@@ -82,6 +82,12 @@ export async function POST(request: Request) {
                 body: `Bienvenue à ${newMemberName} qui vient de rejoindre le groupe !`
             };
             break;
+        case 'groupIsFull':
+            notificationPayload = {
+                title: `Groupe complet : ${groupName}`,
+                body: `Le groupe est maintenant complet ! L'ordre de passage sera bientôt déterminé.`
+            };
+            break;
         default:
             return NextResponse.json({ success: false, error: 'Invalid notification type' }, { status: 400 });
     }

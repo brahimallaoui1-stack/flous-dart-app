@@ -225,7 +225,7 @@ export default function DashboardPage() {
               return;
           }
 
-          if (groupData.members.length >= groupData.totalRounds) {
+          if (groupData.members.length >= groupData.maxMembers) {
               toast({ variant: 'destructive', description: "Ce groupe est déjà complet." });
               setIsJoining(false);
               return;
@@ -234,6 +234,9 @@ export default function DashboardPage() {
           await updateDoc(doc(db, 'groups', groupDoc.id), {
               members: arrayUnion(user.uid)
           });
+
+          const isGroupNowFull = groupData.members.length + 1 === groupData.maxMembers;
+          const notificationType = isGroupNowFull ? 'groupIsFull' : 'newMemberJoined';
           
           // Send notification to group members
           fetch('/api/send-notification', {
@@ -242,7 +245,7 @@ export default function DashboardPage() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                notificationType: 'newMemberJoined',
+                notificationType,
                 groupId: groupDoc.id,
                 groupName: groupData.name,
                 newMemberName: user.displayName || 'Un nouveau membre'
