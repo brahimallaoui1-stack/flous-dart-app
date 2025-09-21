@@ -8,7 +8,7 @@ import { ArrowLeft, Bell, CheckCheck, Loader2, Users, PartyPopper, Wallet, UserP
 import { useCollection, useCollectionData } from 'react-firebase-hooks/firestore';
 import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { collection, query, orderBy, limit, writeBatch, where, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, writeBatch, where, getDocs, Timestamp } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -19,7 +19,7 @@ type Alert = {
     id: string;
     body: string;
     type: 'paymentConfirmation' | 'newMemberJoined' | 'groupIsFull' | 'yourTurn';
-    createdAt: { seconds: number, nanoseconds: number };
+    createdAt: Timestamp | { seconds: number; nanoseconds: number };
     isRead: boolean;
     groupName: string;
     groupId: string;
@@ -38,6 +38,14 @@ const alertColors = {
     groupIsFull: 'text-purple-500 bg-purple-500/10',
     yourTurn: 'text-yellow-500 bg-yellow-500/10',
 }
+
+const getAlertDate = (createdAt: Alert['createdAt']): Date => {
+  if (createdAt instanceof Timestamp) {
+    return createdAt.toDate();
+  }
+  // Fallback for serialized timestamp
+  return new Date(createdAt.seconds * 1000);
+};
 
 export default function AlertsPage() {
     const [user] = useAuthState(auth);
@@ -132,7 +140,7 @@ export default function AlertsPage() {
                                             <p className="font-medium text-sm">{alert.groupName}</p>
                                             <p className="text-sm text-muted-foreground">{alert.body}</p>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                {formatDistanceToNow(new Date(alert.createdAt.seconds * 1000), { addSuffix: true, locale: fr })}
+                                                {formatDistanceToNow(getAlertDate(alert.createdAt), { addSuffix: true, locale: fr })}
                                             </p>
                                         </div>
                                          {!alert.isRead && (
