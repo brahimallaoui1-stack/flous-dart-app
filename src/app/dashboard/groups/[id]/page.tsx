@@ -42,10 +42,10 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight, Trash2, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, deleteDoc, arrayRemove } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -135,6 +135,7 @@ export default function GroupDetailPage() {
   const [turnOrder, setTurnOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [isGivingTurn, setIsGivingTurn] = useState(false);
   const [isGiveTurnDialogOpen, setIsGiveTurnDialogOpen] = useState(false);
   const [selectedMemberToSwap, setSelectedMemberToSwap] = useState<string | null>(null);
@@ -163,6 +164,14 @@ export default function GroupDetailPage() {
 
         if (groupSnap.exists()) {
             const groupData = groupSnap.data();
+
+            // Security check: if user is not in the member list anymore, redirect.
+            if (!groupData.members.includes(user.uid)) {
+                toast({ variant: 'destructive', description: "Vous n'êtes plus membre de ce groupe." });
+                router.push('/dashboard');
+                return;
+            }
+
             const startDate = (groupData.startDate as Timestamp).toDate();
             const isGroupFull = groupData.members.length === groupData.maxMembers;
             const receivedCount = Object.values(groupData.receptionStatus || {}).filter(status => status === 'Reçu').length;
@@ -258,6 +267,7 @@ export default function GroupDetailPage() {
 
         } else {
             toast({ variant: 'destructive', description: "Groupe non trouvé." });
+            router.push('/dashboard');
         }
     } catch (error) {
         console.error("Error fetching group data:", error);
@@ -265,7 +275,7 @@ export default function GroupDetailPage() {
     } finally {
         setLoading(false);
     }
-  }, [groupId, toast, user]);
+  }, [groupId, toast, user, router]);
 
   useEffect(() => {
     fetchGroupData();
@@ -397,6 +407,38 @@ export default function GroupDetailPage() {
     }
   };
 
+  const handleLeaveGroup = async () => {
+    if (!user || !groupDetails || user.uid === groupDetails.adminId) return;
+
+    setIsLeaving(true);
+    try {
+        const groupDocRef = doc(db, 'groups', groupId);
+        await updateDoc(groupDocRef, {
+            members: arrayRemove(user.uid)
+        });
+
+        // Notify remaining members
+        fetch('/api/send-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                notificationType: 'memberLeft',
+                groupId: groupId,
+                groupName: groupDetails.name,
+                leaverName: user.displayName || 'Un membre',
+            }),
+        });
+
+        toast({ description: "Vous avez quitté le groupe." });
+        router.push('/dashboard');
+    } catch (error) {
+        console.error("Error leaving group:", error);
+        toast({ variant: 'destructive', description: "Une erreur est survenue." });
+        setIsLeaving(false);
+    }
+  };
+
+
   
   const isCurrentUserBeneficiary = user && groupDetails?.beneficiary?.id === user.uid;
   const isLastRound = groupDetails && groupDetails.currentRound >= groupDetails.totalRounds - 1;
@@ -430,6 +472,7 @@ export default function GroupDetailPage() {
 
   const isGroupFull = groupDetails && groupDetails.membersCount === groupDetails.totalRounds;
   const isUserAdmin = user && groupDetails && user.uid === groupDetails.adminId;
+  const canUserLeave = user && groupDetails && user.uid !== groupDetails.adminId && groupDetails.status === 'En attente';
 
   const getStatusBadgeVariant = (status: 'En attente' | 'En cours' | 'Terminé') => {
       switch (status) {
@@ -533,6 +576,29 @@ export default function GroupDetailPage() {
                       </DialogFooter>
                   </DialogContent>
               </Dialog>
+            )}
+
+            {canUserLeave && (
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={isLeaving}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            {isLeaving ? 'Départ...' : 'Quitter le groupe'}
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Êtes-vous sûr de vouloir quitter ce groupe ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Cette action est irréversible. Vous ne pourrez plus participer à ce cycle d'épargne.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleLeaveGroup}>Confirmer le départ</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             )}
 
              {isUserAdmin && !isGroupFull && groupDetails.status === 'En attente' && (
@@ -783,27 +849,3 @@ export default function GroupDetailPage() {
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
-
-    
-
-    
-
-
-
-    
-
-    
-
-    
-
-    
-
-
-
-    
-
-
-
-
-
-    

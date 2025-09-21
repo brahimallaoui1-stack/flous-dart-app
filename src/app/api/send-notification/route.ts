@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Firebase Admin SDK not initialized.' }, { status: 500 });
   }
 
-  const { groupId, senderName, groupName, notificationType, newMemberName, recipientId, receiverName } = await request.json();
+  const { groupId, senderName, groupName, notificationType, newMemberName, recipientId, receiverName, leaverName } = await request.json();
 
   if (!groupId || !groupName || !notificationType) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -116,6 +116,13 @@ export async function POST(request: Request) {
                 body: `${senderName} vous a cédé son tour dans le groupe "${groupName}" !`
             };
             break;
+        case 'memberLeft':
+            if (!leaverName) return NextResponse.json({ success: false, error: 'Missing leaverName for this notification type' }, { status: 400 });
+            notificationPayload = {
+                title: `Départ d'un membre - ${groupName}`,
+                body: `${leaverName} a quitté le groupe.`
+            };
+            break;
         default:
             return NextResponse.json({ success: false, error: 'Invalid notification type' }, { status: 400 });
     }
@@ -146,5 +153,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
-
-    
