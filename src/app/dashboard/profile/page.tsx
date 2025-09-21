@@ -41,7 +41,6 @@ export default function ProfilePage() {
             </Avatar>
             <div className="space-y-1">
               <h2 className="text-2xl font-bold">{user.displayName || 'Utilisateur'}</h2>
-              <p className="text-muted-foreground">{user.email}</p>
             </div>
           </div>
           <div>
