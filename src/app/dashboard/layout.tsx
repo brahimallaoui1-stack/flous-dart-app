@@ -32,7 +32,11 @@ export default function DashboardLayout({
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
 
+  const [alertsCollection] = useCollection(
+    user ? query(collection(db, 'users', user.uid, 'alerts'), where('isRead', '==', false)) : null
+  );
 
+  const unreadAlertsCount = alertsCollection?.docs.length || 0;
 
 
   const handleLogout = async () => {
@@ -73,7 +77,18 @@ export default function DashboardLayout({
             <span className="text-xl font-bold text-foreground font-headline">Flous Dart</span>
           </Link>
           <div className="flex items-center gap-4">
-            
+             <Button variant="ghost" size="icon" asChild>
+                <Link href="/dashboard/alerts">
+                    <div className="relative">
+                        <Bell className="h-5 w-5" />
+                        {unreadAlertsCount > 0 && (
+                            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                                {unreadAlertsCount}
+                            </span>
+                        )}
+                    </div>
+                </Link>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -96,6 +111,19 @@ export default function DashboardLayout({
                     <User className="mr-2 h-4 w-4" />
                     <span>Profil</span>
                   </Link>
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/dashboard/alerts" className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <Bell className="mr-2 h-4 w-4" />
+                            <span>Alertes</span>
+                        </div>
+                        {unreadAlertsCount > 0 && (
+                             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                                {unreadAlertsCount}
+                            </span>
+                        )}
+                    </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
