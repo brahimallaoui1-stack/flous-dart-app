@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/icons/logo';
-import { LogOut, User, MessageSquare } from 'lucide-react';
+import { LogOut, User, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -100,8 +100,8 @@ export default function DashboardLayout({
                 <DropdownMenuSeparator />
                  <DropdownMenuItem asChild>
                   <Link href="#">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    <span>Messages</span>
+                    <Bell className="mr-2 h-4 w-4" />
+                    <span>Alertes</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
