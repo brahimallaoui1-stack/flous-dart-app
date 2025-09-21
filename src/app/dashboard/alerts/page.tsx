@@ -47,8 +47,9 @@ export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Removed orderBy('createdAt', 'desc') to avoid indexing issues. Sorting will be done on the client.
   const [alertsCollection, loadingCollection, error] = useCollection(
-    user ? query(collection(db, 'users', user.uid, 'alerts'), orderBy('createdAt', 'desc')) : null
+    user ? query(collection(db, 'users', user.uid, 'alerts')) : null
   );
 
   useEffect(() => {
@@ -66,6 +67,8 @@ export default function AlertsPage() {
           createdAt,
         } as Alert;
       });
+      // Sort alerts on the client-side
+      fetchedAlerts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       setAlerts(fetchedAlerts);
     }
     setLoading(loadingCollection);
@@ -117,7 +120,7 @@ export default function AlertsPage() {
         </CardHeader>
         <CardContent>
           {loading && <p>Chargement des alertes...</p>}
-          {error && <p className="text-destructive">Erreur: Impossible de charger les alertes.</p>}
+          {error && <p className="text-destructive">Erreur: Impossible de charger les alertes. Raison: {error.message}</p>}
           {!loading && alerts.length === 0 && (
             <div className="text-center py-10 px-6 text-muted-foreground border-2 border-dashed rounded-lg">
               <BellOff className="mx-auto h-12 w-12 mb-4" />
