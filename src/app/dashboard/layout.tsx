@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/icons/logo';
-import { LogOut, User, Bell } from 'lucide-react';
+import { LogOut, User, Bell, MessageSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -91,7 +91,7 @@ export default function DashboardLayout({
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName || 'Utilisateur'}</p>
+                    <p className="text-sm font-bold leading-none">{user.displayName || 'Utilisateur'}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
