@@ -23,3 +23,4 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const messaging = (typeof window !== 'undefined') ? getMessaging(app) : undefined;
+export { app };
