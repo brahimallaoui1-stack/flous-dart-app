@@ -234,26 +234,38 @@ export default function DashboardPage() {
           await updateDoc(doc(db, 'groups', groupDoc.id), {
               members: arrayUnion(user.uid)
           });
-
-          const isGroupNowFull = groupData.members.length + 1 === groupData.maxMembers;
-          const notificationType = isGroupNowFull ? 'groupIsFull' : 'newMemberJoined';
           
-          // Send notification to group members
-          fetch('/api/send-notification', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                notificationType,
-                groupId: groupDoc.id,
-                groupName: groupData.name,
-                newMemberName: user.displayName || 'Un nouveau membre'
-            }),
-          });
-
-
           toast({ description: `Vous avez rejoint le groupe "${groupData.name}" !` });
+
+          // Check if the group is now full and send the appropriate notification.
+          const isGroupNowFull = groupData.members.length + 1 === groupData.maxMembers;
+          if (isGroupNowFull) {
+               // Notify all members that the group is full
+               fetch('/api/send-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        notificationType: 'groupIsFull',
+                        groupId: groupDoc.id,
+                        groupName: groupData.name
+                    }),
+                });
+          } else {
+              // Notify existing members that a new member has joined
+              fetch('/api/send-notification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    notificationType: 'newMemberJoined',
+                    groupId: groupDoc.id,
+                    groupName: groupData.name,
+                    newMemberName: user.displayName || 'Un nouveau membre'
+                }),
+              });
+          }
+
           setIsJoinDialogOpen(false); // Close the dialog on success
           router.push(`/dashboard/groups/${groupDoc.id}`);
 
@@ -410,3 +422,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

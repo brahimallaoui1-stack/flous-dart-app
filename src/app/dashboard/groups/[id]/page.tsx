@@ -185,18 +185,6 @@ export default function GroupDetailPage() {
                     status: 'En cours'
                 });
                 currentStatus = 'En cours';
-
-                 // Notify all members that the group is full
-                fetch('/api/send-notification', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        notificationType: 'groupIsFull',
-                        groupId: groupSnap.id,
-                        groupName: groupData.name
-                    }),
-                });
-
             }
 
             if (isCycleFinished && groupData.status !== 'Terminé') {
@@ -776,4 +764,5 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
 
+    
     
