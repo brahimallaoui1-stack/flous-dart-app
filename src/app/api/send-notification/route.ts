@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Firebase Admin SDK not initialized.' }, { status: 500 });
   }
 
-  const { groupId, senderName, groupName, notificationType, newMemberName } = await request.json();
+  const { groupId, senderName, groupName, notificationType, newMemberName, recipientId } = await request.json();
 
   if (!groupId || !groupName || !notificationType) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -36,20 +36,28 @@ export async function POST(request: Request) {
   try {
     const db = getFirestore();
 
-    // 1. Get the group to find all members
-    const groupDoc = await db.collection('groups').doc(groupId).get();
-    if (!groupDoc.exists) {
-      return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
-    }
-    const groupData = groupDoc.data();
-    const memberIds: string[] = groupData?.members || [];
+    let userIds: string[] = [];
 
-    if (memberIds.length === 0) {
+    // If recipientId is provided, target only that user.
+    // Otherwise, get all members from the group.
+    if (recipientId) {
+        userIds = [recipientId];
+    } else {
+        const groupDoc = await db.collection('groups').doc(groupId).get();
+        if (!groupDoc.exists) {
+            return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
+        }
+        const groupData = groupDoc.data();
+        userIds = groupData?.members || [];
+    }
+
+
+    if (userIds.length === 0) {
       return NextResponse.json({ success: true, message: 'No members to notify.' });
     }
 
     // 2. Get all user documents to collect FCM tokens
-    const usersQuery = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', memberIds).get();
+    const usersQuery = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', userIds).get();
     
     let tokens: string[] = [];
     usersQuery.forEach(userDoc => {
@@ -86,6 +94,12 @@ export async function POST(request: Request) {
             notificationPayload = {
                 title: `Groupe complet : ${groupName}`,
                 body: `Le groupe est maintenant complet ! L'ordre de passage sera bientôt déterminé.`
+            };
+            break;
+        case 'yourTurn':
+            notificationPayload = {
+                title: `Félicitations, c'est votre tour ! 🎉`,
+                body: `C'est à votre tour de recevoir les fonds pour le groupe "${groupName}".`
             };
             break;
         default:

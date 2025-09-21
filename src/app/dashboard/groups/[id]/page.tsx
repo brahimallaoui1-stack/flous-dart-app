@@ -315,12 +315,10 @@ export default function GroupDetailPage() {
             [`receptionStatus.${memberId}`]: 'Reçu'
         });
 
-        // Send notification
+        // 1. Notify all members about the confirmation
         fetch('/api/send-notification', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 notificationType: 'paymentConfirmation',
                 groupId: groupId,
@@ -328,6 +326,24 @@ export default function GroupDetailPage() {
                 groupName: groupDetails.name
             }),
         });
+        
+        // 2. Notify the next beneficiary
+        const currentRound = groupDetails.currentRound;
+        const newBeneficiaryId = turnOrder[currentRound + 1];
+
+        if (newBeneficiaryId) {
+             fetch('/api/send-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    notificationType: 'yourTurn',
+                    groupId: groupId,
+                    recipientId: newBeneficiaryId,
+                    groupName: groupDetails.name,
+                }),
+            });
+        }
+
 
         toast({ description: "Vous avez confirmé la réception des fonds ! Les membres seront notifiés." });
         await fetchGroupData(); // Refresh data to show updated status
@@ -757,5 +773,6 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
 
 
     
+
 
 
