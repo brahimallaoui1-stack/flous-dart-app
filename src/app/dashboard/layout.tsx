@@ -13,16 +13,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/icons/logo';
-import { LogOut, User, Bell } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signOut } from 'firebase/auth';
 import React, { useEffect } from 'react';
 import { requestNotificationPermission, saveMessagingDeviceToken } from '@/lib/firebase-messaging';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, where, query } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({
   children,
@@ -31,13 +28,6 @@ export default function DashboardLayout({
 }) {
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
-
-  const [alertsCollection] = useCollection(
-    user ? query(collection(db, 'users', user.uid, 'alerts'), where('isRead', '==', false)) : null
-  );
-
-  const unreadAlertsCount = alertsCollection?.docs.length || 0;
-
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -77,18 +67,6 @@ export default function DashboardLayout({
             <span className="text-xl font-bold text-foreground font-headline">Flous Dart</span>
           </Link>
           <div className="flex items-center gap-4">
-             <Button variant="ghost" size="icon" asChild>
-                <Link href="/dashboard/alerts">
-                    <div className="relative">
-                        <Bell className="h-5 w-5" />
-                        {unreadAlertsCount > 0 && (
-                            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                                {unreadAlertsCount}
-                            </span>
-                        )}
-                    </div>
-                </Link>
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -111,19 +89,6 @@ export default function DashboardLayout({
                     <User className="mr-2 h-4 w-4" />
                     <span>Profil</span>
                   </Link>
-                </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                    <Link href="/dashboard/alerts" className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <Bell className="mr-2 h-4 w-4" />
-                            <span>Alertes</span>
-                        </div>
-                        {unreadAlertsCount > 0 && (
-                             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                                {unreadAlertsCount}
-                            </span>
-                        )}
-                    </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
