@@ -622,7 +622,7 @@ export default function GroupDetailPage() {
                         <TableHead>Membre</TableHead>
                         <TableHead>Rôle</TableHead>
                         <TableHead>Date de réception</TableHead>
-                        <TableHead className="text-right">Statut du paiement</TableHead>
+                        <TableHead className="text-right">Statut de réception</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -775,3 +775,5 @@ export default function GroupDetailPage() {
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
+
+    
