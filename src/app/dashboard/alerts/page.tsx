@@ -13,7 +13,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState }from 'react';
 
 type Alert = {
     id: string;
@@ -94,9 +94,11 @@ export default function AlertsPage() {
             <Card className="shadow-lg">
                 <CardHeader className="flex flex-row justify-between items-start">
                     <div>
-                        <CardTitle className="text-2xl font-headline flex items-center gap-2">
+                        <CardTitle>
+                          <div className="text-2xl font-headline flex items-center gap-2">
                             <Bell className="h-6 w-6" />
                             Centre d'alertes
+                          </div>
                         </CardTitle>
                         <CardDescription>
                             Toutes vos notifications importantes sont regroupées ici.
@@ -154,7 +156,7 @@ export default function AlertsPage() {
 
                      {error && (
                          <div className="text-center py-10 px-6 text-destructive">
-                            <p>Erreur: Impossible de charger les alertes.</p>
+                            <p>impossible de charger les alertes</p>
                          </div>
                     )}
                 </CardContent>
