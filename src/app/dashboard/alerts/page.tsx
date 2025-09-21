@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Bell, BellOff, CheckCheck, CircleDollarSign, Gift, Group, UserPlus, Users, Wallet } from 'lucide-react';
+import { ArrowLeft, Bell, BellOff, CheckCheck, CircleDollarSign, Gift, UserPlus, Users } from 'lucide-react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs, writeBatch, Timestamp } from 'firebase/firestore';
