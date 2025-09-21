@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Firebase Admin SDK not initialized.' }, { status: 500 });
   }
 
-  const { groupId, senderName, groupName, notificationType, newMemberName, recipientId, receiverName, leaverName } = await request.json();
+  const { groupId, senderName, groupName, notificationType, newMemberName, recipientId } = await request.json();
 
   if (!groupId || !groupName || !notificationType) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -100,27 +100,6 @@ export async function POST(request: Request) {
             notificationPayload = {
                 title: `Félicitations, c'est votre tour ! 🎉`,
                 body: `C'est à votre tour de recevoir les fonds pour le groupe "${groupName}".`
-            };
-            break;
-        case 'turnGiven':
-            if (!senderName || !receiverName) return NextResponse.json({ success: false, error: 'Missing senderName or receiverName for this notification type' }, { status: 400 });
-            notificationPayload = {
-                title: `Changement de tour dans ${groupName}`,
-                body: `${senderName} a cédé son tour à ${receiverName} !`
-            };
-            break;
-        case 'turnReceived':
-            if (!senderName) return NextResponse.json({ success: false, error: 'Missing senderName for this notification type' }, { status: 400 });
-            notificationPayload = {
-                title: `Vous avez reçu un tour !`,
-                body: `${senderName} vous a cédé son tour dans le groupe "${groupName}" !`
-            };
-            break;
-        case 'memberLeft':
-            if (!leaverName) return NextResponse.json({ success: false, error: 'Missing leaverName for this notification type' }, { status: 400 });
-            notificationPayload = {
-                title: `Départ d'un membre - ${groupName}`,
-                body: `${leaverName} a quitté le groupe.`
             };
             break;
         default:

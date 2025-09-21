@@ -41,13 +41,15 @@ export default function ProfilePage() {
             </Avatar>
             <div className="space-y-1">
               <h2 className="text-2xl font-bold">{user.displayName || 'Utilisateur'}</h2>
+              <p className="text-muted-foreground">{user.email}</p>
             </div>
           </div>
           <div>
             <h3 className="text-lg font-semibold">Informations</h3>
             <div className="mt-2 space-y-1 text-sm">
-               <p><span className="font-semibold">Email:</span> {user.email}</p>
+               <p><span className="font-semibold">ID Utilisateur:</span> {user.uid}</p>
                <p><span className="font-semibold">Compte créé le:</span> {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('fr-FR') : 'N/A'}</p>
+               <p><span className="font-semibold">Dernière connexion:</span> {user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleDateString('fr-FR') : 'N/A'}</p>
             </div>
           </div>
         </CardContent>
