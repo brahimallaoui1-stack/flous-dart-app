@@ -1,12 +1,10 @@
 
 import { NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
 
 // Initialize Firebase Admin SDK
-// Important: This requires GOOGLE_APPLICATION_CREDENTIALS to be set in your environment variables.
-// The value should be the base64 encoded service account key.
 try {
   if (!admin.apps.length) {
     const serviceAccount = JSON.parse(
@@ -33,32 +31,86 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
   }
 
+  const db = getFirestore();
+
   try {
-    const db = getFirestore();
-
-    let userIds: string[] = [];
-
-    // If recipientId is provided, target only that user.
-    // Otherwise, get all members from the group.
+    let userIdsToNotify: string[] = [];
+    let notificationPayload;
+    let alertData: any = {
+        groupId,
+        groupName,
+        type: notificationType,
+        createdAt: FieldValue.serverTimestamp(),
+        isRead: false,
+    };
+    
+    // Determine who to notify and construct payloads
+    const groupDoc = await db.collection('groups').doc(groupId).get();
+    if (!groupDoc.exists) {
+        return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
+    }
+    const groupData = groupDoc.data()!;
+    
+    // If a specific recipient is targeted, only they get the notification.
+    // Otherwise, all members of the group are notified.
     if (recipientId) {
-        userIds = [recipientId];
+        userIdsToNotify = [recipientId];
     } else {
-        const groupDoc = await db.collection('groups').doc(groupId).get();
-        if (!groupDoc.exists) {
-            return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
-        }
-        const groupData = groupDoc.data();
-        userIds = groupData?.members || [];
+        userIdsToNotify = groupData.members || [];
     }
 
+    switch (notificationType) {
+        case 'paymentConfirmation':
+            if (!senderName) return NextResponse.json({ success: false, error: 'Missing senderName' }, { status: 400 });
+            notificationPayload = {
+                title: `Confirmation de paiement - ${groupName}`,
+                body: `${senderName} a confirmé avoir reçu les fonds pour ce tour !`
+            };
+            alertData.body = notificationPayload.body;
+            break;
+        case 'newMemberJoined':
+            if (!newMemberName) return NextResponse.json({ success: false, error: 'Missing newMemberName' }, { status: 400 });
+            notificationPayload = {
+                title: `Nouveau membre dans ${groupName}`,
+                body: `Bienvenue à ${newMemberName} qui vient de rejoindre le groupe !`
+            };
+            alertData.body = notificationPayload.body;
+            break;
+        case 'groupIsFull':
+            notificationPayload = {
+                title: `Groupe complet : ${groupName}`,
+                body: `Le groupe est maintenant complet ! L'ordre de passage sera bientôt déterminé.`
+            };
+            alertData.body = notificationPayload.body;
+            break;
+        case 'yourTurn':
+             notificationPayload = {
+                title: `Félicitations, c'est votre tour ! 🎉`,
+                body: `C'est à votre tour de recevoir les fonds pour le groupe "${groupName}".`
+            };
+            alertData.body = notificationPayload.body;
+            break;
+        default:
+            return NextResponse.json({ success: false, error: 'Invalid notification type' }, { status: 400 });
+    }
 
-    if (userIds.length === 0) {
+    if (userIdsToNotify.length === 0) {
       return NextResponse.json({ success: true, message: 'No members to notify.' });
     }
-
-    // 2. Get all user documents to collect FCM tokens
-    const usersQuery = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', userIds).get();
     
+    // Save alerts to Firestore for each user
+    const batch = db.batch();
+    userIdsToNotify.forEach(userId => {
+        // We don't save "yourTurn" notification for the sender themselves to avoid clutter.
+        if (notificationType === 'yourTurn' && userId === senderName) return;
+
+        const alertRef = db.collection('users').doc(userId).collection('alerts').doc();
+        batch.set(alertRef, alertData);
+    });
+    await batch.commit();
+
+    // Get FCM tokens for push notifications
+    const usersQuery = await db.collection('users').where(admin.firestore.FieldPath.documentId(), 'in', userIdsToNotify).get();
     let tokens: string[] = [];
     usersQuery.forEach(userDoc => {
       const userData = userDoc.data();
@@ -68,45 +120,11 @@ export async function POST(request: Request) {
     });
 
     const uniqueTokens = [...new Set(tokens)];
-
     if (uniqueTokens.length === 0) {
-      return NextResponse.json({ success: true, message: 'No registered device tokens found for members.' });
+      return NextResponse.json({ success: true, message: 'Alerts saved, but no device tokens for push notifications.' });
     }
 
-    // 3. Construct notification based on type
-    let notificationPayload;
-    switch (notificationType) {
-        case 'paymentConfirmation':
-             if (!senderName) return NextResponse.json({ success: false, error: 'Missing senderName for this notification type' }, { status: 400 });
-             notificationPayload = {
-                title: `Confirmation de paiement - ${groupName}`,
-                body: `${senderName} a confirmé avoir reçu les fonds pour ce tour !`
-            };
-            break;
-        case 'newMemberJoined':
-            if (!newMemberName) return NextResponse.json({ success: false, error: 'Missing newMemberName for this notification type' }, { status: 400 });
-            notificationPayload = {
-                title: `Nouveau membre dans ${groupName}`,
-                body: `Bienvenue à ${newMemberName} qui vient de rejoindre le groupe !`
-            };
-            break;
-        case 'groupIsFull':
-            notificationPayload = {
-                title: `Groupe complet : ${groupName}`,
-                body: `Le groupe est maintenant complet ! L'ordre de passage sera bientôt déterminé.`
-            };
-            break;
-        case 'yourTurn':
-            notificationPayload = {
-                title: `Félicitations, c'est votre tour ! 🎉`,
-                body: `C'est à votre tour de recevoir les fonds pour le groupe "${groupName}".`
-            };
-            break;
-        default:
-            return NextResponse.json({ success: false, error: 'Invalid notification type' }, { status: 400 });
-    }
-    
-    // 4. Send notifications
+    // Send push notifications
     const message = {
       notification: notificationPayload,
       tokens: uniqueTokens,
@@ -119,16 +137,19 @@ export async function POST(request: Request) {
         const failedTokens: string[] = [];
         response.responses.forEach((resp, idx) => {
             if (!resp.success) {
-            failedTokens.push(uniqueTokens[idx]);
+                failedTokens.push(uniqueTokens[idx]);
             }
         });
         console.log('List of tokens that caused failures: ' + failedTokens);
     }
 
-
     return NextResponse.json({ success: true, response });
   } catch (error) {
     console.error('Error sending notification:', error);
-    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+    let errorMessage = 'Internal Server Error';
+    if (error instanceof Error) {
+        errorMessage = error.message;
+    }
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
