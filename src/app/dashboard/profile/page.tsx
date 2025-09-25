@@ -30,7 +30,7 @@ export default function ProfilePage() {
         </Button>
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-headline">Profil</CardTitle>
+          <CardTitle className="text-2xl font-headline">Mon Profil</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
