@@ -29,26 +29,21 @@ export default function ProfilePage() {
             </Link>
         </Button>
       <Card className="shadow-lg">
-        <CardHeader>
+        <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">Mon Profil</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-24 w-24">
-               <AvatarFallback className="bg-muted text-muted-foreground">
-                    <User className="h-12 w-12" />
-                </AvatarFallback>
-            </Avatar>
-            <div className="space-y-1">
-              <h2 className="text-2xl font-bold">{user.displayName || 'Utilisateur'}</h2>
-            </div>
+        <CardContent className="flex flex-col items-center justify-center space-y-6 p-12">
+          <Avatar className="h-32 w-32">
+             <AvatarFallback className="bg-muted text-muted-foreground">
+                  <User className="h-16 w-16" />
+              </AvatarFallback>
+          </Avatar>
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-bold">{user.displayName || 'Utilisateur'}</h2>
+            <p className="text-muted-foreground">{user.email}</p>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">Informations</h3>
-            <div className="mt-2 space-y-1 text-sm">
-               <p><span className="font-semibold">Email:</span> {user.email}</p>
-               <p><span className="font-semibold">Compte créé le:</span> {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('fr-FR') : 'N/A'}</p>
-            </div>
+          <div className="text-center text-sm text-muted-foreground">
+             <p>Membre depuis le {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('fr-FR') : 'N/A'}</p>
           </div>
         </CardContent>
       </Card>
