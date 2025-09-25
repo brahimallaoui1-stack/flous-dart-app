@@ -32,7 +32,7 @@ export default function ProfilePage() {
       <Card className="shadow-lg overflow-hidden">
         <div className="relative h-40 w-full">
             <Image
-                src="https://picsum.photos/seed/finance/800/200"
+                src="https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyMHx8bW9uZXl8ZW58MHx8fHwxNzU4ODMyODc3fDA&ixlib=rb-4.1.0&q=80&w=1080"
                 alt="Image de couverture"
                 layout="fill"
                 objectFit="cover"
