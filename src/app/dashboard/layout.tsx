@@ -87,7 +87,7 @@ export default function DashboardLayout({
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/profile">
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profil</span>
+                    <span>Mon Profil</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
