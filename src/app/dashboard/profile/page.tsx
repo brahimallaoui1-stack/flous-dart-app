@@ -4,7 +4,7 @@
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, User } from 'lucide-react';
@@ -41,16 +41,19 @@ export default function ProfilePage() {
         </div>
         <div className="relative -mt-16 flex flex-col items-center pb-12 pt-4 px-6">
           <Avatar className="h-32 w-32 border-4 border-card shadow-lg">
+             {user.photoURL ? (
+                <AvatarImage src={user.photoURL} alt={user.displayName || 'User Avatar'} />
+              ) : null}
              <AvatarFallback className="bg-muted text-muted-foreground">
                   <User className="h-16 w-16" />
               </AvatarFallback>
           </Avatar>
-          <div className="text-center space-y-2 mt-4">
+          <div className="text-center mt-4">
             <h2 className="text-3xl font-bold">{user.displayName || 'Utilisateur'}</h2>
-            <p className="text-muted-foreground">{user.email}</p>
           </div>
-          <div className="text-center text-sm text-muted-foreground mt-4">
-             <p>Membre depuis le {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('fr-FR') : 'N/A'}</p>
+          <div className="text-center space-y-2 mt-4 text-muted-foreground">
+            <p>{user.email}</p>
+            <p className="text-sm">Membre depuis le {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('fr-FR') : 'N/A'}</p>
           </div>
         </div>
       </Card>
