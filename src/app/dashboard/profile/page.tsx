@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, User } from 'lucide-react';
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const [user, loading] = useAuthState(auth);
@@ -28,24 +29,30 @@ export default function ProfilePage() {
                 Retour au tableau de bord
             </Link>
         </Button>
-      <Card className="shadow-lg">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline">Mon Profil</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center space-y-6 p-12">
-          <Avatar className="h-32 w-32">
+      <Card className="shadow-lg overflow-hidden">
+        <div className="relative h-40 w-full">
+            <Image
+                src="https://picsum.photos/seed/finance/800/200"
+                alt="Image de couverture"
+                layout="fill"
+                objectFit="cover"
+                data-ai-hint="green abstract pattern"
+            />
+        </div>
+        <div className="relative -mt-16 flex flex-col items-center pb-12 pt-4 px-6">
+          <Avatar className="h-32 w-32 border-4 border-card shadow-lg">
              <AvatarFallback className="bg-muted text-muted-foreground">
                   <User className="h-16 w-16" />
               </AvatarFallback>
           </Avatar>
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-2 mt-4">
             <h2 className="text-3xl font-bold">{user.displayName || 'Utilisateur'}</h2>
             <p className="text-muted-foreground">{user.email}</p>
           </div>
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="text-center text-sm text-muted-foreground mt-4">
              <p>Membre depuis le {user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('fr-FR') : 'N/A'}</p>
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   );
