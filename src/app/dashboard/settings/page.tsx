@@ -4,9 +4,18 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Bell, Brush, Palette } from 'lucide-react';
+import { ArrowLeft, Bell, Brush, Palette, Monitor, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function SettingsPage() {
+  const { setTheme, theme } = useTheme();
 
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4 md:px-6">
@@ -32,10 +41,34 @@ export default function SettingsPage() {
                     <div className="space-y-0.5">
                         <h3 className="font-medium flex items-center gap-2"><Brush className="h-4 w-4" />Thème</h3>
                         <p className="text-sm text-muted-foreground">
-                            Bientôt disponible: choisissez entre le mode clair et le mode sombre.
+                            Choisissez entre le mode clair, sombre ou système.
                         </p>
                     </div>
-                    <Button variant="outline" disabled>Choisir</Button>
+                     <Select onValueChange={setTheme} defaultValue={theme}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Choisir un thème" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">
+                          <div className="flex items-center gap-2">
+                            <Sun className="h-4 w-4" />
+                            Clair
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="dark">
+                           <div className="flex items-center gap-2">
+                            <Moon className="h-4 w-4" />
+                            Sombre
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="system">
+                           <div className="flex items-center gap-2">
+                            <Monitor className="h-4 w-4" />
+                            Système
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                 </div>
             </CardContent>
         </Card>
