@@ -202,21 +202,9 @@ export default function MyGroupsPage() {
                             <span className="font-bold">{`Tour ${group.currentRound} / ${group.totalRounds}`}</span>
                         </div>
                         <div className="flex flex-col p-2 rounded-md bg-muted/50">
-                            <span className="flex items-center text-muted-foreground text-xs mb-1"><Repeat className="mr-1 h-3 w-3"/>Fréquence</span>
-                            <span className="font-bold capitalize">{getFrequencyLabel(group.frequency)}</span>
+                            <span className="flex items-center text-muted-foreground text-xs mb-1"><Hash className="mr-1 h-3 w-3"/>Montant total</span>
+                            <span className="font-bold">{group.totalContribution} MAD</span>
                         </div>
-                         <div className="flex flex-col p-2 rounded-md bg-muted/50">
-                            <span className="flex items-center text-muted-foreground text-xs mb-1"><Users className="mr-1 h-3 w-3"/>Membres</span>
-                            <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
-                        </div>
-                        <div className="flex flex-col p-2 rounded-md bg-muted/50">
-                            <span className="flex items-center text-muted-foreground text-xs mb-1"><CircleDollarSign className="mr-1 h-3 w-3"/>Cotisation</span>
-                            <span className="font-bold">{group.contribution} MAD</span>
-                        </div>
-                    </div>
-                     <div className="flex flex-col p-2 rounded-md bg-muted/50">
-                        <span className="flex items-center text-muted-foreground text-xs mb-1"><Hash className="mr-1 h-3 w-3"/>Montant total</span>
-                        <span className="font-bold">{group.totalContribution} MAD</span>
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between text-xs text-muted-foreground">
