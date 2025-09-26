@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Bell, Brush, Palette, Monitor, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Palette, Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import {
   Select,
@@ -39,7 +39,7 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
                  <div className="flex items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                        <h3 className="font-medium flex items-center gap-2"><Brush className="h-4 w-4" />Thème</h3>
+                        <h3 className="font-medium">Thème</h3>
                         <p className="text-sm text-muted-foreground">
                             Choisissez entre le mode clair, sombre ou système.
                         </p>
@@ -76,20 +76,21 @@ export default function SettingsPage() {
         <Card className="shadow-lg">
             <CardHeader>
                 <CardTitle className="text-2xl font-headline flex items-center gap-2">
-                    <Bell className="h-6 w-6" />
-                    Notifications
+                    <HelpCircle className="h-6 w-6" />
+                    Comment ça marche ?
                 </CardTitle>
                  <CardDescription>
-                    Gérez vos préférences de notification.
+                    Consultez notre guide pour comprendre le fonctionnement de l'application.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">
-                    Les paramètres de notification seront bientôt disponibles ici.
-                </p>
+                 <Button asChild>
+                    <Link href="/how-it-works">Voir le guide</Link>
+                 </Button>
             </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+
