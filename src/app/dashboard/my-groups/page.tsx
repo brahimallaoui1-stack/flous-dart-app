@@ -207,10 +207,6 @@ export default function MyGroupsPage() {
                         </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Début: {format(group.startDate, "dd/MM/yy")}</span>
-                      <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Fin: {group.finalReceptionDate ? format(group.finalReceptionDate, "dd/MM/yy") : 'N/A'}</span>
-                  </CardFooter>
               </Card>
           </Link>
         ))}
