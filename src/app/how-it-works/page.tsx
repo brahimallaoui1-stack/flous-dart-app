@@ -1,11 +1,17 @@
 
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, UserPlus, Users, Repeat, Target, ShieldCheck, SkipForward } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
 
 export default function HowItWorksPage() {
+  const [user, loading] = useAuthState(auth);
+
   return (
     <div className="bg-background text-foreground min-h-screen">
        <header className="p-4 flex justify-start">
@@ -16,9 +22,9 @@ export default function HowItWorksPage() {
       </header>
       <main className="container mx-auto max-w-4xl py-8 px-4 md:px-6">
         <Button variant="ghost" asChild className="mb-8">
-            <Link href="/">
+            <Link href={user ? "/dashboard" : "/"}>
                 <ArrowLeft className="mr-2 h-4 w-4"/>
-                Retour à l'accueil
+                Retour
             </Link>
         </Button>
 
@@ -104,13 +110,15 @@ export default function HowItWorksPage() {
             </Card>
         </div>
 
-        <div className="text-center mt-16 animate-fadeIn" style={{ animationDelay: '1.4s' }}>
-            <h2 className="text-3xl font-bold font-headline mb-4">Prêt à commencer ?</h2>
-            <p className="text-muted-foreground mb-6">Rejoignez des centaines d'utilisateurs qui font confiance à Flous Dart pour une gestion sereine de leur épargne.</p>
-            <Button asChild size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-shadow">
-                <Link href="/signup">Créer un compte gratuitement</Link>
-            </Button>
-        </div>
+        {!loading && !user && (
+          <div className="text-center mt-16 animate-fadeIn" style={{ animationDelay: '1.4s' }}>
+              <h2 className="text-3xl font-bold font-headline mb-4">Prêt à commencer ?</h2>
+              <p className="text-muted-foreground mb-6">Rejoignez des centaines d'utilisateurs qui font confiance à Flous Dart pour une gestion sereine de leur épargne.</p>
+              <Button asChild size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-shadow">
+                  <Link href="/signup">Créer un compte gratuitement</Link>
+              </Button>
+          </div>
+        )}
 
       </main>
     </div>
