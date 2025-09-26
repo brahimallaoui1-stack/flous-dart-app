@@ -53,6 +53,7 @@ import { addDays, addMonths, addWeeks, format, isPast, isToday } from 'date-fns'
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useParams, useRouter } from 'next/navigation';
+import { Separator } from '@/components/ui/separator';
 
 
 interface GroupDetails {
@@ -555,44 +556,44 @@ export default function GroupDetailPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Membres</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{groupDetails.membersCount} / {groupDetails.totalRounds}</div>
-              </CardContent>
-          </Card>
-           <Card className="shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Cotisation</CardTitle>
-                  <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{groupDetails.contribution} <span className="text-sm text-muted-foreground">MAD / {getFrequencyLabel(groupDetails.frequency)}</span></div>
-              </CardContent>
-          </Card>
-           <Card className="shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Montant total</CardTitle>
-                  <Hash className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-2xl font-bold">{groupDetails.totalContribution} <span className="text-sm text-muted-foreground">MAD</span></div>
-              </CardContent>
-          </Card>
-           <Card className="shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Période</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                  <div className="text-xl font-bold">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate ? format(groupDetails.finalReceptionDate, "dd/MM/yy") : 'N/A'}</div>
-              </CardContent>
-          </Card>
-      </div>
+      <Card className="shadow-md mb-6">
+        <CardHeader>
+          <CardTitle>Détails du groupe</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
+            <div className="flex items-center gap-3">
+              <Users className="h-6 w-6 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Membres</p>
+                <p className="font-bold">{groupDetails.membersCount} / {groupDetails.totalRounds}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <CircleDollarSign className="h-6 w-6 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Cotisation</p>
+                <p className="font-bold">{groupDetails.contribution} <span className="text-sm font-normal text-muted-foreground">MAD / {getFrequencyLabel(groupDetails.frequency)}</span></p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Hash className="h-6 w-6 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Montant total</p>
+                <p className="font-bold">{groupDetails.totalContribution} <span className="text-sm font-normal text-muted-foreground">MAD</span></p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Calendar className="h-6 w-6 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Période</p>
+                <p className="font-bold text-sm">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate ? format(groupDetails.finalReceptionDate, "dd/MM/yy") : 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Card className="shadow-md">
         <CardHeader>
@@ -765,4 +766,6 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
 }
 
     
+    
+
     
