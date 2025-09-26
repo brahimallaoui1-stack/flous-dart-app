@@ -14,6 +14,7 @@ import { collection, query, where, getDocs, documentId, Timestamp } from 'fireba
 import { addDays, addMonths, addWeeks, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from '@/components/ui/separator';
 
 type UserDetails = {
     displayName: string | null;
@@ -195,26 +196,28 @@ export default function MyGroupsPage() {
                       </div>
                   </CardHeader>
                   <CardContent className="flex-grow space-y-3 text-sm">
-                        <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                          <span className="flex items-center text-muted-foreground"><ChevronsRight className="mr-2 h-4 w-4"/>Progression</span>
-                          <span className="font-bold">{`Tour ${group.currentRound} / ${group.totalRounds}`}</span>
-                      </div>
-                        <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                          <span className="flex items-center text-muted-foreground"><Repeat className="mr-2 h-4 w-4"/>Fréquence</span>
-                          <span className="font-bold capitalize">{getFrequencyLabel(group.frequency)}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                          <span className="flex items-center text-muted-foreground"><Users className="mr-2 h-4 w-4"/>Membres</span>
-                          <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                          <span className="flex items-center text-muted-foreground"><CircleDollarSign className="mr-2 h-4 w-4"/>Cotisation</span>
-                          <span className="font-bold">{group.contribution} MAD</span>
-                      </div>
-                      <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
-                          <span className="flex items-center text-muted-foreground"><Hash className="mr-2 h-4 w-4"/>Montant total</span>
-                          <span className="font-bold">{group.totalContribution} MAD</span>
-                      </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col p-2 rounded-md bg-muted/50">
+                            <span className="flex items-center text-muted-foreground text-xs mb-1"><ChevronsRight className="mr-1 h-3 w-3"/>Progression</span>
+                            <span className="font-bold">{`Tour ${group.currentRound} / ${group.totalRounds}`}</span>
+                        </div>
+                        <div className="flex flex-col p-2 rounded-md bg-muted/50">
+                            <span className="flex items-center text-muted-foreground text-xs mb-1"><Repeat className="mr-1 h-3 w-3"/>Fréquence</span>
+                            <span className="font-bold capitalize">{getFrequencyLabel(group.frequency)}</span>
+                        </div>
+                         <div className="flex flex-col p-2 rounded-md bg-muted/50">
+                            <span className="flex items-center text-muted-foreground text-xs mb-1"><Users className="mr-1 h-3 w-3"/>Membres</span>
+                            <span className="font-bold">{group.members.length} / {group.totalRounds}</span>
+                        </div>
+                        <div className="flex flex-col p-2 rounded-md bg-muted/50">
+                            <span className="flex items-center text-muted-foreground text-xs mb-1"><CircleDollarSign className="mr-1 h-3 w-3"/>Cotisation</span>
+                            <span className="font-bold">{group.contribution} MAD</span>
+                        </div>
+                    </div>
+                     <div className="flex flex-col p-2 rounded-md bg-muted/50">
+                        <span className="flex items-center text-muted-foreground text-xs mb-1"><Hash className="mr-1 h-3 w-3"/>Montant total</span>
+                        <span className="font-bold">{group.totalContribution} MAD</span>
+                    </div>
                   </CardContent>
                   <CardFooter className="flex justify-between text-xs text-muted-foreground">
                       <span className="flex items-center"><Calendar className="mr-1 h-3 w-3" />Début: {format(group.startDate, "dd/MM/yy")}</span>
@@ -267,5 +270,7 @@ export default function MyGroupsPage() {
     </div>
   );
 }
+
+    
 
     
