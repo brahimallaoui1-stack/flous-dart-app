@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, HelpCircle, Palette, Monitor, Moon, Sun, LogOut, UserCircle } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Palette, Monitor, Moon, Sun, UserCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import {
   Select,
@@ -23,10 +23,6 @@ export default function SettingsPage() {
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
-  };
 
 
   return (
@@ -102,23 +98,6 @@ export default function SettingsPage() {
             </CardContent>
         </Card>
 
-        <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle className="text-2xl font-headline flex items-center gap-2">
-                    <UserCircle className="h-6 w-6" />
-                    Compte
-                </CardTitle>
-                 <CardDescription>
-                    Gérez les informations de votre compte et la déconnexion.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <Button variant="destructive" onClick={handleLogout} disabled={loading}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Se déconnecter
-                 </Button>
-            </CardContent>
-        </Card>
       </div>
     </div>
   );

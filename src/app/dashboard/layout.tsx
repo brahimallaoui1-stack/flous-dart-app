@@ -45,14 +45,11 @@ export default function DashboardLayout({
     }
   }, [user, loading, router]);
 
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return 'U';
-    const names = name.split(' ');
-    if (names.length > 1) {
-      return `${names[0][0]}${names[names.length - 1][0]}`;
-    }
-    return name.substring(0, 2);
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
   };
+
 
   if (loading || !user) {
     return (
@@ -77,7 +74,7 @@ export default function DashboardLayout({
                   <Avatar className="h-10 w-10">
                     {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User Avatar'} />}
                     <AvatarFallback className="bg-muted text-muted-foreground font-bold">
-                      {getInitials(user.displayName)}
+                      <User className="h-5 w-5" />
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -106,6 +103,11 @@ export default function DashboardLayout({
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Paramètres</span>
                   </Link>
+                </DropdownMenuItem>
+                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Se déconnecter</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
