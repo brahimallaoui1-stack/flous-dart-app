@@ -1,7 +1,7 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getMessaging } from 'firebase/messaging';
 
@@ -20,6 +20,13 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
+
+// Set session persistence
+setPersistence(auth, browserLocalPersistence)
+  .catch((error) => {
+    console.error("Could not set persistence", error);
+  });
+
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const messaging = (typeof window !== 'undefined') ? getMessaging(app) : undefined;

@@ -146,7 +146,7 @@ export default function GroupDetailPage() {
         case 'monthly':
             return 'Mois';
         case 'weekly':
-            return 'Sem';
+            return 'Semaine';
         case 'bi-weekly':
             return '14 jrs';
         default:
