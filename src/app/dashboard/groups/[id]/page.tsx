@@ -319,10 +319,17 @@ export default function GroupDetailPage() {
 
     try {
         const groupDocRef = doc(db, 'groups', groupId);
-        // Use dot notation to update a specific field in a map
-        await updateDoc(groupDocRef, {
+        
+        const updates: { [key: string]: any } = {
             [`receptionStatus.${memberId}`]: 'Reçu'
-        });
+        };
+
+        const newReceivedCount = groupDetails.receivedCount + 1;
+        if (newReceivedCount === groupDetails.totalRounds) {
+            updates.status = 'Terminé';
+        }
+
+        await updateDoc(groupDocRef, updates);
 
         // 1. Notify all members about the confirmation
         fetch('/api/send-notification', {
@@ -336,21 +343,23 @@ export default function GroupDetailPage() {
             }),
         });
         
-        // 2. Notify the next beneficiary
-        const currentRound = groupDetails.currentRound;
-        const newBeneficiaryId = turnOrder[currentRound + 1];
+        // 2. Notify the next beneficiary if the group is not finished
+        if (newReceivedCount < groupDetails.totalRounds) {
+            const currentRound = groupDetails.currentRound;
+            const newBeneficiaryId = turnOrder[currentRound + 1];
 
-        if (newBeneficiaryId) {
-             fetch('/api/send-notification', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    notificationType: 'yourTurn',
-                    groupId: groupId,
-                    recipientId: newBeneficiaryId,
-                    groupName: groupDetails.name,
-                }),
-            });
+            if (newBeneficiaryId) {
+                 fetch('/api/send-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        notificationType: 'yourTurn',
+                        groupId: groupId,
+                        recipientId: newBeneficiaryId,
+                        groupName: groupDetails.name,
+                    }),
+                });
+            }
         }
 
 
@@ -783,12 +792,5 @@ export default function GroupDetailPage() {
 const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {size?:'sm'}) => {
     return <Badge className={cn("px-2 py-0.5 text-xs", className)} {...props} />;
 }
-
-    
-    
-
-    
-
-
 
     
