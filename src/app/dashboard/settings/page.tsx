@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, HelpCircle, Palette, Monitor, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Palette, Monitor, Moon, Sun, LogOut, UserCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import {
   Select,
@@ -13,9 +13,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
 
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme();
+  const [user, loading] = useAuthState(auth);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
 
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4 md:px-6">
@@ -89,8 +101,25 @@ export default function SettingsPage() {
                  </Button>
             </CardContent>
         </Card>
+
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="text-2xl font-headline flex items-center gap-2">
+                    <UserCircle className="h-6 w-6" />
+                    Compte
+                </CardTitle>
+                 <CardDescription>
+                    Gérez les informations de votre compte et la déconnexion.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Button variant="destructive" onClick={handleLogout} disabled={loading}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Se déconnecter
+                 </Button>
+            </CardContent>
+        </Card>
       </div>
     </div>
   );
 }
-

@@ -28,11 +28,6 @@ export default function DashboardLayout({
 }) {
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
-  };
   
   useEffect(() => {
     if (user) {
@@ -111,11 +106,6 @@ export default function DashboardLayout({
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Paramètres</span>
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Se déconnecter</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
