@@ -259,7 +259,7 @@ export default function MyGroupsPage() {
                         <p className="ml-4 text-muted-foreground">Chargement...</p>
                     </div>
                 ) : (
-                    <GroupGrid groups={previousGroups} emptyMessage="aucun group precedent a afficher pour le moment" />
+                    <GroupGrid groups={previousGroups} emptyMessage="Aucun groupe précédent à afficher pour le moment" />
                 )}
             </TabsContent>
         </Tabs>
