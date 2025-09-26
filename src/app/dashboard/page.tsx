@@ -104,7 +104,7 @@ export default function DashboardPage() {
 
 
   const [groupsCollection, loadingCollection, error] = useCollection(
-    user ? query(collection(db, 'groups'), where('members', 'array-contains', user.uid)) : null
+    user ? query(collection(db, 'groups'), where('members', 'array-contains', user.uid), where('status', 'in', ['En cours', 'En attente'])) : null
   );
 
   const getFrequencyLabel = (frequency: 'monthly' | 'weekly' | 'bi-weekly') => {
@@ -413,7 +413,7 @@ export default function DashboardPage() {
           {!isLoading && groups.length === 0 && (
             <div className="text-center py-12 px-6 bg-card rounded-lg shadow-md">
                 <h3 className="text-xl font-semibold mb-2">Bienvenue !</h3>
-                <p className="text-muted-foreground mb-4">Vous ne faites partie d'aucun groupe pour le moment.</p>
+                <p className="text-muted-foreground mb-4">Vous n'avez aucun groupe en cours ou en attente pour le moment.</p>
                 <p className="text-muted-foreground">Créez-en un ou rejoignez un groupe existant avec un code d'invitation.</p>
             </div>
         )}

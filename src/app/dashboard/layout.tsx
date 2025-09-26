@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -50,6 +50,15 @@ export default function DashboardLayout({
     }
   }, [user, loading, router]);
 
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return `${names[0][0]}${names[names.length - 1][0]}`;
+    }
+    return name.substring(0, 2);
+  };
+
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -71,8 +80,9 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-muted text-muted-foreground">
-                      <User className="h-5 w-5" />
+                    {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User Avatar'} />}
+                    <AvatarFallback className="bg-muted text-muted-foreground font-bold">
+                      {getInitials(user.displayName)}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -85,7 +95,7 @@ export default function DashboardLayout({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard">
+                  <Link href="/dashboard/my-groups">
                     <Users className="mr-2 h-4 w-4" />
                     <span>Mes groupes</span>
                   </Link>
