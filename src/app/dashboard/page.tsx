@@ -58,8 +58,6 @@ interface Group {
     userRole: 'Admin' | 'Membre';
     
     // Calculated fields
-    currentBeneficiary?: UserDetails;
-    nextBeneficiary?: UserDetails;
     totalContribution: number;
     finalReceptionDate: Date | null;
 }
@@ -163,8 +161,6 @@ export default function DashboardPage() {
                 const finalReceptionDate = totalRounds > 0 ? calcDate(startDate, totalRounds - 1) : null;
                 
                 const currentRound = receivedCount;
-                const currentBeneficiaryId = data.turnOrder?.[currentRound];
-                const nextBeneficiaryId = data.turnOrder?.[currentRound + 1];
 
                 return {
                     id: doc.id,
@@ -178,8 +174,6 @@ export default function DashboardPage() {
                     startDate: startDate,
                     turnOrder: data.turnOrder || [],
                     userRole: data.admin === user.uid ? 'Admin' : 'Membre',
-                    currentBeneficiary: currentBeneficiaryId ? userDetailsMap.get(currentBeneficiaryId) : undefined,
-                    nextBeneficiary: nextBeneficiaryId ? userDetailsMap.get(nextBeneficiaryId) : undefined,
                     totalContribution: data.contribution * totalRounds,
                     finalReceptionDate: finalReceptionDate,
                 } as Group;
@@ -371,13 +365,13 @@ export default function DashboardPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-3 text-sm">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="flex flex-col p-2 rounded-md bg-muted/50">
-                                    <span className="flex items-center text-muted-foreground text-xs mb-1"><ChevronsRight className="mr-1 h-3 w-3"/>Progression</span>
+                           <div className="space-y-2">
+                                <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                                    <span className="flex items-center text-muted-foreground text-xs"><ChevronsRight className="mr-1 h-3 w-3"/>Progression</span>
                                     <span className="font-bold">{`Tour ${group.currentRound} / ${group.totalRounds}`}</span>
                                 </div>
-                                <div className="flex flex-col p-2 rounded-md bg-muted/50">
-                                    <span className="flex items-center text-muted-foreground text-xs mb-1"><Hash className="mr-1 h-3 w-3"/>Montant total</span>
+                                <div className="flex justify-between items-center p-2 rounded-md bg-muted/50">
+                                    <span className="flex items-center text-muted-foreground text-xs"><Hash className="mr-1 h-3 w-3"/>Montant total</span>
                                     <span className="font-bold">{group.totalContribution} MAD</span>
                                 </div>
                             </div>
