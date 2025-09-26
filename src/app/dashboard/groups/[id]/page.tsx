@@ -42,7 +42,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Crown, SkipForward, User, Loader2, ClipboardCopy, ShieldQuestion, Wallet, Users, CircleDollarSign, Hash, Calendar, ChevronsRight, Trash2, Repeat } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { doc, getDoc, collection, getDocs, query, where, documentId, Timestamp, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -561,7 +561,21 @@ export default function GroupDetailPage() {
           <CardTitle>Détails du groupe</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6">
+            <div className="flex items-center gap-3">
+              <ChevronsRight className="h-6 w-6 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Progression</p>
+                <p className="font-bold">{groupDetails.currentRound} / {groupDetails.totalRounds} tours</p>
+              </div>
+            </div>
+             <div className="flex items-center gap-3">
+              <Repeat className="h-6 w-6 text-muted-foreground" />
+              <div>
+                <p className="text-sm text-muted-foreground">Fréquence</p>
+                <p className="font-bold capitalize">{getFrequencyLabel(groupDetails.frequency)}</p>
+              </div>
+            </div>
             <div className="flex items-center gap-3">
               <Users className="h-6 w-6 text-muted-foreground" />
               <div>
@@ -573,7 +587,7 @@ export default function GroupDetailPage() {
               <CircleDollarSign className="h-6 w-6 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Cotisation</p>
-                <p className="font-bold">{groupDetails.contribution} <span className="text-sm font-normal text-muted-foreground">MAD / {getFrequencyLabel(groupDetails.frequency)}</span></p>
+                <p className="font-bold">{groupDetails.contribution} <span className="text-sm font-normal text-muted-foreground">MAD</span></p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -769,3 +783,4 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
     
 
     
+
