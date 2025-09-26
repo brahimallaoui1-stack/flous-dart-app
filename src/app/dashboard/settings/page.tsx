@@ -1,0 +1,62 @@
+
+'use client';
+
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, Bell, Brush, Palette } from 'lucide-react';
+
+export default function SettingsPage() {
+
+  return (
+    <div className="container mx-auto max-w-4xl py-8 px-4 md:px-6">
+      <Button variant="ghost" asChild className="mb-4">
+        <Link href="/dashboard">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Retour au tableau de bord
+        </Link>
+      </Button>
+      <div className="space-y-8">
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="text-2xl font-headline flex items-center gap-2">
+                    <Palette className="h-6 w-6" />
+                    Apparence
+                </CardTitle>
+                <CardDescription>
+                    Personnalisez l'apparence de l'application.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <h3 className="font-medium flex items-center gap-2"><Brush className="h-4 w-4" />Thème</h3>
+                        <p className="text-sm text-muted-foreground">
+                            Bientôt disponible: choisissez entre le mode clair et le mode sombre.
+                        </p>
+                    </div>
+                    <Button variant="outline" disabled>Choisir</Button>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+            <CardHeader>
+                <CardTitle className="text-2xl font-headline flex items-center gap-2">
+                    <Bell className="h-6 w-6" />
+                    Notifications
+                </CardTitle>
+                 <CardDescription>
+                    Gérez vos préférences de notification.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground">
+                    Les paramètres de notification seront bientôt disponibles ici.
+                </p>
+            </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
