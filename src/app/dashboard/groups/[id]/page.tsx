@@ -449,7 +449,7 @@ export default function GroupDetailPage() {
             <Button variant="ghost" asChild className="mb-4">
                 <Link href="/dashboard">
                     <ArrowLeft className="mr-2 h-4 w-4"/>
-                    Retour à mes groupes
+                    Retour au tableau de bord
                 </Link>
             </Button>
             <p className="text-center text-destructive">Impossible de charger les détails du groupe.</p>
@@ -460,9 +460,9 @@ export default function GroupDetailPage() {
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
         <Button variant="ghost" asChild className="mb-4">
-            <Link href="/dashboard/my-groups">
+            <Link href="/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4"/>
-                Retour à mes groupes
+                Retour au tableau de bord
             </Link>
         </Button>
 
