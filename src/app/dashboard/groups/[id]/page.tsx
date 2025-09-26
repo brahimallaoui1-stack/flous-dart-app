@@ -561,50 +561,55 @@ export default function GroupDetailPage() {
           <CardTitle>Détails du groupe</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6">
-            <div className="flex items-center gap-3">
-              <ChevronsRight className="h-6 w-6 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Progression</p>
-                <p className="font-bold">{groupDetails.currentRound} / {groupDetails.totalRounds} tours</p>
-              </div>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <ChevronsRight className="h-5 w-5" />
+                        <span>Progression</span>
+                    </div>
+                    <p className="font-bold">{groupDetails.currentRound} / {groupDetails.totalRounds} tours</p>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <Repeat className="h-5 w-5" />
+                        <span>Fréquence</span>
+                    </div>
+                    <p className="font-bold capitalize">{getFrequencyLabel(groupDetails.frequency)}</p>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <Users className="h-5 w-5" />
+                        <span>Membres</span>
+                    </div>
+                    <p className="font-bold">{groupDetails.membersCount} / {groupDetails.totalRounds}</p>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <CircleDollarSign className="h-5 w-5" />
+                        <span>Cotisation</span>
+                    </div>
+                    <p className="font-bold">{groupDetails.contribution} <span className="text-sm font-normal text-muted-foreground">MAD</span></p>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <Hash className="h-5 w-5" />
+                        <span>Montant total</span>
+                    </div>
+                    <p className="font-bold">{groupDetails.totalContribution} <span className="text-sm font-normal text-muted-foreground">MAD</span></p>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <Calendar className="h-5 w-5" />
+                        <span>Période</span>
+                    </div>
+                    <p className="font-bold text-sm">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate ? format(groupDetails.finalReceptionDate, "dd/MM/yy") : 'N/A'}</p>
+                </div>
             </div>
-             <div className="flex items-center gap-3">
-              <Repeat className="h-6 w-6 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Fréquence</p>
-                <p className="font-bold capitalize">{getFrequencyLabel(groupDetails.frequency)}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Users className="h-6 w-6 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Membres</p>
-                <p className="font-bold">{groupDetails.membersCount} / {groupDetails.totalRounds}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <CircleDollarSign className="h-6 w-6 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Cotisation</p>
-                <p className="font-bold">{groupDetails.contribution} <span className="text-sm font-normal text-muted-foreground">MAD</span></p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Hash className="h-6 w-6 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Montant total</p>
-                <p className="font-bold">{groupDetails.totalContribution} <span className="text-sm font-normal text-muted-foreground">MAD</span></p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Calendar className="h-6 w-6 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Période</p>
-                <p className="font-bold text-sm">{format(groupDetails.startDate, "dd/MM/yy")} - {groupDetails.finalReceptionDate ? format(groupDetails.finalReceptionDate, "dd/MM/yy") : 'N/A'}</p>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
@@ -784,3 +789,6 @@ const BadgeSm = ({ className, ...props }: React.ComponentProps<typeof Badge> & {
 
     
 
+
+
+    
