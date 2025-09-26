@@ -185,15 +185,6 @@ export default function MyGroupsPage() {
                               {group.status}
                           </Badge>
                       </div>
-                      <div className="space-y-2 pt-2 text-sm">
-                          <div className="flex items-center p-2 rounded-md bg-yellow-100/50 dark:bg-yellow-900/30 border border-yellow-200/80 dark:border-yellow-800/50">
-                              <Crown className="mr-3 h-5 w-5 text-yellow-500 shrink-0"/>
-                              <div className="flex flex-col">
-                                  <span className="text-muted-foreground text-xs">Bénéficiaire actuel</span>
-                                  <span className="font-bold text-primary truncate">{group.status === 'Terminé' ? 'Aucun' : group.currentBeneficiary?.displayName ?? 'À déterminer'}</span>
-                              </div>
-                          </div>
-                      </div>
                   </CardHeader>
                   <CardContent className="flex-grow space-y-3 text-sm">
                     <div className="grid grid-cols-2 gap-3">
@@ -246,7 +237,7 @@ export default function MyGroupsPage() {
                         <p className="ml-4 text-muted-foreground">Chargement...</p>
                     </div>
                 ) : (
-                    <GroupGrid groups={previousGroups} emptyMessage="Aucun groupe précédent à afficher pour le moment" />
+                    <GroupGrid groups={previousGroups} emptyMessage="Aucun groupe précédent à afficher pour le moment." />
                 )}
             </TabsContent>
         </Tabs>
@@ -254,6 +245,8 @@ export default function MyGroupsPage() {
     </div>
   );
 }
+
+    
 
     
 
