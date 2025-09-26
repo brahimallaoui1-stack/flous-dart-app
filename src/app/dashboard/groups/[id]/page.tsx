@@ -451,7 +451,7 @@ export default function GroupDetailPage() {
   return (
     <div className="container mx-auto py-8 px-4 md:px-6">
         <Button variant="ghost" asChild className="mb-4">
-            <Link href="/dashboard">
+            <Link href="/dashboard/my-groups">
                 <ArrowLeft className="mr-2 h-4 w-4"/>
                 Retour à mes groupes
             </Link>
