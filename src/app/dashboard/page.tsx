@@ -347,7 +347,7 @@ export default function DashboardPage() {
       </div>
 
       <div>
-        <h2 className="text-2xl font-semibold mb-4">Mes groupes</h2>
+        <h2 className="text-2xl font-semibold mb-4">Mes groupes actuels</h2>
         {isLoading && (
             <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -422,5 +422,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
