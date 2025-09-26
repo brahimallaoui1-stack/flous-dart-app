@@ -104,11 +104,6 @@ export default function DashboardLayout({
                     <span>Paramètres</span>
                   </Link>
                 </DropdownMenuItem>
-                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Se déconnecter</span>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
