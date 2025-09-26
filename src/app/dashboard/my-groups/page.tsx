@@ -160,11 +160,11 @@ export default function MyGroupsPage() {
 
   const isLoading = loadingCollection || loadingGroups;
 
-  const GroupGrid = ({ groups }: { groups: Group[] }) => {
+  const GroupGrid = ({ groups, emptyMessage }: { groups: Group[], emptyMessage: string }) => {
     if (groups.length === 0) {
       return (
         <div className="text-center py-12 px-6 bg-card rounded-lg shadow-md mt-6">
-            <p className="text-muted-foreground">Aucun groupe à afficher dans cette catégorie.</p>
+            <p className="text-muted-foreground">{emptyMessage}</p>
         </div>
       );
     }
@@ -249,7 +249,7 @@ export default function MyGroupsPage() {
                         <p className="ml-4 text-muted-foreground">Chargement...</p>
                     </div>
                 ) : (
-                    <GroupGrid groups={currentGroups} />
+                    <GroupGrid groups={currentGroups} emptyMessage="Aucun groupe à afficher dans cette catégorie." />
                 )}
             </TabsContent>
             <TabsContent value="previous">
@@ -259,7 +259,7 @@ export default function MyGroupsPage() {
                         <p className="ml-4 text-muted-foreground">Chargement...</p>
                     </div>
                 ) : (
-                    <GroupGrid groups={previousGroups} />
+                    <GroupGrid groups={previousGroups} emptyMessage="aucun group precedent a afficher pour le moment" />
                 )}
             </TabsContent>
         </Tabs>
@@ -267,3 +267,5 @@ export default function MyGroupsPage() {
     </div>
   );
 }
+
+    
